@@ -3,7 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Worship Line Up Maker Pro</title>
+    <title>Worship Line Up Maker Pro - Cloud</title>
+    
+    <!-- Firebase App & Database (Modular CDN v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLXaXG8EcxhGxqZCkFiqzLp9uF7vnYZS0",
+            authDomain: "preach-mate.firebaseapp.com",
+            databaseURL: "https://preach-mate-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "preach-mate",
+            storageBucket: "preach-mate.firebasestorage.app",
+            messagingSenderId: "977514996603",
+            appId: "1:977514996603:web:08df66f4761b0795b553de"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.fbDB = db;
+        window.fbRef = ref;
+        window.fbSet = set;
+        window.fbGet = get;
+        window.fbChild = child;
+        window.fbRemove = remove;
+        window.fbOnValue = onValue;
+
+        // I-trigger ang pag-load ng mga kanta galing Firebase pagkaka-open
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -184,7 +215,6 @@
             z-index: 50;
         }
 
-        /* Full Screen Textarea para sa Edit Mode */
         .editor-textarea {
             flex: 1;
             width: 100%;
@@ -201,11 +231,10 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Full Screen Output para sa Play Mode */
         .output-box {
             flex: 1;
             padding: 16px;
-            padding-bottom: 90px; /* Dagdag space para sa floating jumper sa ibaba */
+            padding-bottom: 90px;
             overflow-y: auto;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.95rem;
@@ -216,7 +245,6 @@
             scroll-behavior: smooth;
         }
 
-        /* Floating Jumper Icons Bar sa ibaba */
         .floating-jumper-bar {
             position: absolute;
             bottom: 12px;
@@ -253,7 +281,6 @@
 
         .chord { color: var(--chord); font-weight: bold; }
 
-        /* Full Block Yellow Highlight */
         .song-part-block {
             display: block;
             margin-top: 14px;
@@ -344,7 +371,7 @@
     <header>
         <div class="brand">
             <h1>Worship Line Up</h1>
-            <span class="sub-brand" id="active-lineup-label">Service Builder</span>
+            <span class="sub-brand" id="active-lineup-label">Cloud Connected</span>
         </div>
         <div class="header-actions">
             <button class="btn" onclick="switchView('builder')">Builder</button>
@@ -365,19 +392,19 @@
             </div>
         </div>
 
-        <!-- EDIT VIEW (True Full Screen WYSIWYG) -->
+        <!-- EDIT VIEW -->
         <div id="view-edit" class="view-section">
             <div class="full-screen-container">
                 <div class="mode-topbar">
                     <button class="btn btn-sm" onclick="exitEditMode()">⬅ Back</button>
                     <span id="edit-song-title-label" style="font-weight: 600; font-size: 0.85rem; color: var(--accent);">Edit Song</span>
-                    <button class="btn btn-sm btn-success" onclick="saveActiveSongChanges()">Save & Play</button>
+                    <button class="btn btn-sm btn-success" onclick="saveActiveSongChanges()">Save to Cloud</button>
                 </div>
-                <textarea id="editor-textarea" class="editor-textarea" placeholder="[Verse 1]&#10;C    G&#10;Lyrics dito..." oninput="previewEditChanges()"></textarea>
+                <textarea id="editor-textarea" class="editor-textarea" placeholder="[Verse 1]&#10;C    G&#10;Lyrics dito..."></textarea>
             </div>
         </div>
 
-        <!-- PLAY VIEW (True Full Screen with Floating Jumper) -->
+        <!-- PLAY VIEW -->
         <div id="view-play" class="view-section">
             <div class="full-screen-container">
                 <div class="mode-topbar">
@@ -393,7 +420,6 @@
                     </div>
                 </div>
                 <div id="play-lyrics-box" class="output-box">Wala pang nakatalagang kanta.</div>
-                <!-- Floating Jumper Icons Bar sa Ibaba -->
                 <div id="floating-jumper-bar" class="floating-jumper-bar">
                     <span style="font-size: 0.65rem; color: var(--text-muted); align-self: center; font-weight: bold;">JUMP:</span>
                 </div>
@@ -451,13 +477,36 @@
     <script>
         let categories = ["Opening", "Joyful", "Solemn", "Offerings", "Closing"];
         let lineUpData = {}; 
-        let songsDatabase = JSON.parse(localStorage.getItem('worship_songs_db') || "{}");
-        let setLists = JSON.parse(localStorage.getItem('worship_setlists') || "[]");
+        let songsDatabase = {};
+        let setLists = [];
         
         let activeCategoryForSelection = null;
         let activePlayingCategory = null;
         let currentPlayingSong = { title: "", content: "", semitones: 0 };
         const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+        // --- FIREBASE CLOUD DATA SYNC ---
+        window.addEventListener('firebase-ready', () => {
+            // Real-time listener para sa mga Kanta (Songs DB)
+            window.fbOnValue(window.fbRef(window.fbDB, 'worship_songs'), (snapshot) => {
+                if (snapshot.exists()) {
+                    songsDatabase = snapshot.val();
+                } else {
+                    songsDatabase = {};
+                }
+                renderBuilderCategories();
+            });
+
+            // Real-time listener para sa mga Set Lists
+            window.fbOnValue(window.fbRef(window.fbDB, 'worship_setlists'), (snapshot) => {
+                if (snapshot.exists()) {
+                    let data = snapshot.val();
+                    setLists = Array.isArray(data) ? data : Object.values(data);
+                } else {
+                    setLists = [];
+                }
+            });
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             renderBuilderCategories();
@@ -524,14 +573,14 @@
                     item.innerHTML = `
                         <span style="font-size: 0.85rem; font-weight: 500; cursor:pointer; flex:1;" onclick="selectSongForCategory('${title}')">🎵 ${title}</span>
                         <div style="display:flex; gap:4px;">
-                            <button class="btn btn-sm btn-danger" onclick="deleteSongFromDb('${title}')">Del</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSongFromCloud('${title}')">Del</button>
                         </div>
                     `;
                     listContainer.appendChild(item);
                 }
             }
             if (!found) {
-                listContainer.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); text-align:center; padding: 12px; font-style:italic;">Walang nakitang kanta sa database.</span>`;
+                listContainer.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); text-align:center; padding: 12px; font-style:italic;">Walang nakitang kanta sa cloud database.</span>`;
             }
         }
 
@@ -555,7 +604,7 @@
         function openNewSongDirectModal() {
             closeModal('song-select-modal');
             activePlayingCategory = null;
-            document.getElementById('edit-song-title-label').innerText = "Bagong Kanta";
+            document.getElementById('edit-song-title-label').innerText = "Bagong Kanta (Cloud)";
             document.getElementById('editor-textarea').value = "[Verse 1]\n\n[Chorus]\n";
             switchView('edit');
         }
@@ -565,7 +614,6 @@
             let song = lineUpData[cat];
             if (!song) return;
             document.getElementById('edit-song-title-label').innerText = "I-edit: " + song.title;
-            // Isasama natin ang pamagat sa itaas ng textarea para madali ma-edit o ma-save
             document.getElementById('editor-textarea').value = `[${song.title}]\n\n` + song.content;
             switchView('edit');
         }
@@ -583,29 +631,33 @@
             }
         }
 
-        function saveActiveSongChanges() {
+        async function saveActiveSongChanges() {
             let fullText = document.getElementById('editor-textarea').value.trim();
             if (!fullText) { alert("Walang nilalaman ang kanta."); return; }
 
-            // Kunin ang pamagat mula sa unang bracket [Title] kung mayroon, o gamitin default
             let firstLineMatch = fullText.match(/^\[(.*?)\]/);
             let title = firstLineMatch ? firstLineMatch[1] : "Untitled Song";
-            
-            // Tanggalin ang title block sa simula para maging purong lyrics & chords ang content
             let content = fullText.replace(/^\[.*?\]\s*/, "").trim();
+            let safeKey = title.replace(/[\.#$\/\[\]]/g, "_");
 
-            songsDatabase[title] = content;
-            localStorage.setItem('worship_songs_db', JSON.stringify(songsDatabase));
+            try {
+                // I-save diretso sa Firebase Realtime Database
+                await window.fbSet(window.fbRef(window.fbDB, 'worship_songs/' + safeKey), content);
+                
+                songsDatabase[safeKey] = content;
 
-            if (activePlayingCategory) {
-                lineUpData[activePlayingCategory] = { title: title, content: content };
-                currentPlayingSong = { title: title, content: content, semitones: 0 };
-                document.getElementById('play-song-title').innerText = title;
-                renderPlayScreen();
-                switchView('play');
-            } else {
-                renderBuilderCategories();
-                switchView('builder');
+                if (activePlayingCategory) {
+                    lineUpData[activePlayingCategory] = { title: title, content: content };
+                    currentPlayingSong = { title: title, content: content, semitones: 0 };
+                    document.getElementById('play-song-title').innerText = title;
+                    renderPlayScreen();
+                    switchView('play');
+                } else {
+                    renderBuilderCategories();
+                    switchView('builder');
+                }
+            } catch (e) {
+                alert("Error sa pag-save sa cloud: " + e.message);
             }
         }
 
@@ -657,7 +709,6 @@
                     htmlOutput += `<div id="${id}" class="song-part-block">\n`;
                     htmlOutput += `<span class="song-part-title" onclick="jumpToBlock('${id}')">[${label}]</span>\n`;
 
-                    // Floating Jumper Chip sa ibaba
                     let jChip = document.createElement('button');
                     jChip.className = 'jumper-chip';
                     jChip.innerText = label;
@@ -679,7 +730,6 @@
             lyricsBox.innerHTML = htmlOutput;
         }
 
-        // Line-Count Dynamic Centering batay sa buong haba ng bloke
         function jumpToBlock(blockId) {
             document.querySelectorAll('.song-part-block').forEach(el => el.classList.remove('active-block'));
             const target = document.getElementById(blockId);
@@ -700,25 +750,42 @@
             renderPlayScreen();
         }
 
-        function deleteSongFromDb(title) {
-            if (confirm(`Burahin ang "${title}"?`)) {
-                delete songsDatabase[title];
-                localStorage.setItem('worship_songs_db', JSON.stringify(songsDatabase));
-                renderSongsListModal("");
+        async function deleteSongFromCloud(title) {
+            if (confirm(`Burahin ang "${title}" sa cloud database?`)) {
+                let safeKey = title.replace(/[\.#$\/\[\]]/g, "_");
+                try {
+                    await window.fbRemove(window.fbRef(window.fbDB, 'worship_songs/' + safeKey));
+                    delete songsDatabase[title];
+                    renderSongsListModal("");
+                } catch (e) {
+                    alert("Error sa pagbura: " + e.message);
+                }
             }
         }
 
         function openSaveModal() { document.getElementById('save-lineup-modal').style.display = 'flex'; }
 
-        function confirmSaveLineUp() {
+        async function confirmSaveLineUp() {
             let wlName = document.getElementById('wl-name-input').value.trim();
             let dateVal = document.getElementById('lineup-date-input').value;
             if (!wlName || !dateVal) { alert("Ilagay ang pangalan ng Worship Leader at petsa."); return; }
 
-            setLists.unshift({ id: Date.now(), worshipLeader: wlName, date: dateVal, lineup: { ...lineUpData } });
-            localStorage.setItem('worship_setlists', JSON.stringify(setLists));
-            closeModal('save-lineup-modal');
-            alert("Matagumpay na nai-save ang Set List!");
+            let newSetList = {
+                id: Date.now(),
+                worshipLeader: wlName,
+                date: dateVal,
+                lineup: { ...lineUpData }
+            };
+
+            setLists.unshift(newSetList);
+
+            try {
+                await window.fbSet(window.fbRef(window.fbDB, 'worship_setlists'), setLists);
+                closeModal('save-lineup-modal');
+                alert("Matagumpay na nai-save ang Set List sa Cloud!");
+            } catch (e) {
+                alert("Error sa pag-save ng Set List: " + e.message);
+            }
         }
 
         function openSetListModal() { renderSetLists(); document.getElementById('setlist-modal').style.display = 'flex'; }
@@ -727,17 +794,18 @@
             const container = document.getElementById('setlist-container');
             container.innerHTML = "";
             if (setLists.length === 0) {
-                container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); text-align:center; font-style:italic; padding: 10px;">Walang naka-save na Set List.</span>`;
+                container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); text-align:center; font-style:italic; padding: 10px;">Walang naka-save na Set List sa cloud.</span>`;
                 return;
             }
 
             setLists.forEach((sl, index) => {
+                if (!sl) return;
                 let div = document.createElement('div');
                 div.className = 'setlist-card';
                 div.innerHTML = `
                     <div>
                         <strong style="color: var(--success); font-size: 0.82rem; display:block;">📅 ${sl.date} — WL: ${sl.worshipLeader}</strong>
-                        <span style="font-size: 0.72rem; color: var(--text-muted);">${Object.keys(sl.lineup).length} kanta ang nakalista</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">${sl.lineup ? Object.keys(sl.lineup).length : 0} kanta ang nakalista</span>
                     </div>
                     <div style="display:flex; gap:4px;">
                         <button class="btn btn-sm btn-primary" onclick="loadSetList(${index})">Load</button>
@@ -750,11 +818,23 @@
 
         function loadSetList(index) {
             let sl = setLists[index];
-            if (sl) {
+            if (sl && sl.lineup) {
                 lineUpData = { ...sl.lineup };
                 closeModal('setlist-modal');
                 renderBuilderCategories();
                 alert(`Na-load ang Set List noong ${sl.date}`);
+            }
+        }
+
+        async function deleteSetList(index) {
+            if (confirm("Burahin ang Set List na ito sa cloud?")) {
+                setLists.splice(index, 1);
+                try {
+                    await window.fbSet(window.fbRef(window.fbDB, 'worship_setlists'), setLists);
+                    renderSetLists();
+                } catch (e) {
+                    alert("Error sa pagbura: " + e.message);
+                }
             }
         }
 
