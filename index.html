@@ -3,182 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Worship Line Up Maker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>Worship Line Up Maker Pro</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --border-color: #334155;
-            --text-primary: #f8fafc;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-            --danger-color: #ef4444;
-            --success-color: #10b981;
-            --chord-color: #22c55e;
-            --section-color: #38bdf8;
-            --highlight-color: #facc15;
+            --bg-color: #0b0f19;
+            --panel-bg: #131b2e;
+            --panel-border: #1e293b;
+            --card-bg: #1a233a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #059669;
+            --danger: #dc2626;
+            --chord: #4ade80;
+            --section: #38bdf8;
+            --highlight: #facc15;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg-color);
-            color: var(--text-primary);
+            color: var(--text-main);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
+        /* Modern Header */
         header {
             background: var(--panel-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 16px;
+            border-bottom: 1px solid var(--panel-border);
+            padding: 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
+            z-index: 100;
         }
 
-        h1 { font-size: 1rem; font-weight: 700; color: #fff; }
+        .brand { display: flex; flex-direction: column; }
+        h1 { font-size: 0.95rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+        .sub-brand { font-size: 0.7rem; color: var(--text-muted); }
 
-        .header-btns { display: flex; gap: 8px; }
+        .header-actions { display: flex; gap: 6px; }
 
         .btn {
-            background: #334155;
+            background: #273548;
             color: #fff;
-            border: 1px solid #475569;
-            padding: 6px 12px;
+            border: 1px solid #334155;
+            padding: 6px 10px;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             cursor: pointer;
             font-weight: 500;
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
-        .btn:hover { background: #475569; }
-        .btn-primary { background: var(--accent-color); border: none; }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-success { background: var(--success-color); border: none; color: #000; font-weight: bold; }
-        .btn-danger { background: var(--danger-color); border: none; }
-        .btn-sm { padding: 3px 8px; font-size: 0.75rem; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--accent); border: none; }
+        .btn-success { background: var(--success); border: none; color: #fff; font-weight: bold; }
+        .btn-danger { background: var(--danger); border: none; }
+        .btn-sm { padding: 4px 8px; font-size: 0.72rem; }
 
         .workspace {
             flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view-section {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            background: var(--bg-color);
+        }
+        .view-section.active { display: flex; }
+
+        /* Builder Layout */
+        .builder-scroll {
+            flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             -webkit-overflow-scrolling: touch;
         }
 
-        .view-section { display: none; flex-direction: column; height: 100%; }
-        .view-section.active { display: flex; }
+        .builder-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            padding: 0 4px;
+        }
 
-        /* Category Card Style */
+        .categories-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 20px;
+        }
+
         .category-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .category-header {
+        .category-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .category-title {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--section-color);
+        .category-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--section);
             text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
 
-        .assigned-song-display {
-            font-size: 0.85rem;
-            color: #fff;
+        .song-slot {
             background: #0f172a;
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px dashed var(--border-color);
-            cursor: pointer;
+            border: 1px dashed #334155;
+            border-radius: 8px;
+            padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
         }
-        .assigned-song-display:hover { border-color: var(--accent-color); }
+        .song-slot:hover { border-color: var(--accent); }
+        .song-slot-filled { border: 1px solid #334155; border-style: solid; background: #111c33; }
 
-        /* Play View Layout with Right-Side Jumper */
-        .play-container {
+        .song-title-text {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .slot-actions { display: flex; gap: 6px; }
+
+        /* True Full-Screen Edit & Play Views */
+        .full-screen-container {
             display: flex;
+            flex-direction: column;
             height: 100%;
             position: relative;
-            overflow: hidden;
+            background: var(--bg-color);
         }
 
-        .play-lyrics-pane {
+        .mode-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--panel-border);
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        /* Full Screen Textarea para sa Edit Mode */
+        .editor-textarea {
             flex: 1;
-            overflow-y: auto;
+            width: 100%;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
             padding: 16px;
-            font-family: monospace;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Full Screen Output para sa Play Mode */
+        .output-box {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 90px; /* Dagdag space para sa floating jumper sa ibaba */
+            overflow-y: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.95rem;
             line-height: 1.6;
             white-space: pre;
+            tab-size: 4;
+            -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
         }
 
-        .play-jumper-pane {
-            width: 130px;
-            background: #111827;
-            border-left: 1px solid var(--border-color);
-            padding: 10px;
+        /* Floating Jumper Icons Bar sa ibaba */
+        .floating-jumper-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(19, 27, 46, 0.92);
+            border: 1px solid var(--panel-border);
+            padding: 6px 12px;
+            border-radius: 24px;
             display: flex;
-            flex-direction: column;
             gap: 6px;
-            overflow-y: auto;
-            flex-shrink: 0;
+            overflow-x: auto;
+            max-width: 95%;
+            backdrop-filter: blur(6px);
+            z-index: 60;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            -webkit-overflow-scrolling: touch;
         }
+        .floating-jumper-bar::-webkit-scrollbar { display: none; }
 
-        .chord { color: var(--chord-color); font-weight: bold; }
+        .jumper-chip {
+            background: #1e293b;
+            color: var(--section);
+            border: 1px solid #334155;
+            padding: 5px 10px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .jumper-chip:hover { background: #334155; color: #fff; }
 
+        .chord { color: var(--chord); font-weight: bold; }
+
+        /* Full Block Yellow Highlight */
         .song-part-block {
             display: block;
             margin-top: 14px;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
             transition: background 0.3s ease;
         }
 
         .song-part-title {
-            color: var(--section-color);
+            color: var(--section);
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             cursor: pointer;
+            display: inline-block;
         }
 
         .song-part-block.active-block {
             background-color: rgba(250, 204, 21, 0.15);
-            border-left: 4px solid var(--highlight-color);
+            border-left: 4px solid var(--highlight);
         }
         .song-part-block.active-block .song-part-title {
-            color: var(--highlight-color) !important;
+            color: var(--highlight) !important;
         }
 
-        /* Modal Overlay */
+        /* Modern Modals */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(5, 8, 15, 0.85);
+            backdrop-filter: blur(4px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -186,79 +292,110 @@
             padding: 16px;
         }
 
-        .modal-content {
+        .modal-card {
             background: var(--panel-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--panel-border);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
-        .modal-content input, .modal-content textarea, .modal-content select {
+        .modal-card h3 { font-size: 0.95rem; font-weight: 700; }
+        
+        .modal-card input, .modal-card textarea {
             width: 100%;
             background: #0f172a;
-            border: 1px solid var(--border-color);
+            border: 1px solid #334155;
             color: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border-radius: 8px;
             font-size: 0.9rem;
             outline: none;
         }
 
-        .setlist-item {
-            background: #111827;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
+        .song-item-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            background: #0f172a;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #1e293b;
+        }
+
+        .setlist-card {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1 id="app-title">Worship Line Up Maker</h1>
-        <div class="header-btns">
+        <div class="brand">
+            <h1>Worship Line Up</h1>
+            <span class="sub-brand" id="active-lineup-label">Service Builder</span>
+        </div>
+        <div class="header-actions">
             <button class="btn" onclick="switchView('builder')">Builder</button>
-            <button class="btn btn-primary" onclick="openSaveModal()">Save Line Up</button>
-            <button class="btn btn-success" onclick="openSetListModal()">Set Lists</button>
+            <button class="btn btn-primary btn-sm" onclick="openSaveModal()">Save</button>
+            <button class="btn btn-success btn-sm" onclick="openSetListModal()">Set Lists</button>
         </div>
     </header>
 
     <div class="workspace">
         <!-- BUILDER VIEW -->
         <div id="view-builder" class="view-section active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 0.85rem; color: #94a3b8;">Ayusin ang Line Up para sa Service:</span>
-                <button class="btn btn-sm btn-primary" onclick="openAddCategoryModal()">+ Add Category</button>
+            <div class="builder-scroll">
+                <div class="builder-toolbar">
+                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Piliin ang mga kanta bawat bahagi:</span>
+                    <button class="btn btn-sm btn-primary" onclick="openAddCategoryModal()">+ Category</button>
+                </div>
+                <div id="categories-container" class="categories-grid"></div>
             </div>
-            <div id="categories-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
         </div>
 
-        <!-- PLAY VIEW -->
+        <!-- EDIT VIEW (True Full Screen WYSIWYG) -->
+        <div id="view-edit" class="view-section">
+            <div class="full-screen-container">
+                <div class="mode-topbar">
+                    <button class="btn btn-sm" onclick="exitEditMode()">⬅ Back</button>
+                    <span id="edit-song-title-label" style="font-weight: 600; font-size: 0.85rem; color: var(--accent);">Edit Song</span>
+                    <button class="btn btn-sm btn-success" onclick="saveActiveSongChanges()">Save & Play</button>
+                </div>
+                <textarea id="editor-textarea" class="editor-textarea" placeholder="[Verse 1]&#10;C    G&#10;Lyrics dito..." oninput="previewEditChanges()"></textarea>
+            </div>
+        </div>
+
+        <!-- PLAY VIEW (True Full Screen with Floating Jumper) -->
         <div id="view-play" class="view-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #1e293b; border-bottom: 1px solid var(--border-color);">
-                <button class="btn btn-sm" onclick="switchView('builder')">⬅ Back to Line Up</button>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span id="play-song-title" style="font-weight: bold; font-size: 0.9rem; color: var(--section-color);">Song Title</span>
-                    <div style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 4px; display: flex; overflow: hidden;">
-                        <span style="padding: 2px 6px; font-size: 0.75rem; font-family: monospace;">Key: <strong id="trans-val">0</strong></span>
-                        <button onclick="transposeKey(-1)" style="background:#334155; color:#fff; border:none; padding:2px 8px; cursor:pointer;">-</button>
-                        <button onclick="transposeKey(1)" style="background:#334155; color:#fff; border:none; padding:2px 8px; cursor:pointer;">+</button>
+            <div class="full-screen-container">
+                <div class="mode-topbar">
+                    <button class="btn btn-sm" onclick="switchView('builder')">⬅ Builder</button>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="play-song-title" style="font-weight: 600; font-size: 0.85rem; color: var(--section);">Song Title</span>
+                        <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; display: flex; overflow: hidden; align-items: center;">
+                            <span style="padding: 2px 6px; font-size: 0.7rem; font-family: monospace; color: var(--text-muted);">Key: <strong id="trans-val" style="color:#fff;">0</strong></span>
+                            <button onclick="transposeKey(-1)" style="background:#273548; color:#fff; border:none; padding:4px 8px; cursor:pointer; font-weight:bold;">-</button>
+                            <button onclick="transposeKey(1)" style="background:#273548; color:#fff; border:none; padding:4px 8px; cursor:pointer; font-weight:bold;">+</button>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="openEditorFromPlay()">Edit</button>
                     </div>
                 </div>
-            </div>
-            <div class="play-container">
-                <div id="play-lyrics-box" class="play-lyrics-pane">Pumili ng kanta mula sa Line Up para simulan.</div>
-                <div id="play-jumper-pane" class="play-jumper-pane">
-                    <span style="font-size: 0.7rem; color: #94a3b8; font-weight: bold; text-align: center;">JUMPER</span>
+                <div id="play-lyrics-box" class="output-box">Wala pang nakatalagang kanta.</div>
+                <!-- Floating Jumper Icons Bar sa Ibaba -->
+                <div id="floating-jumper-bar" class="floating-jumper-bar">
+                    <span style="font-size: 0.65rem; color: var(--text-muted); align-self: center; font-weight: bold;">JUMP:</span>
                 </div>
             </div>
         </div>
@@ -266,57 +403,44 @@
 
     <!-- SONG SELECTOR MODAL -->
     <div id="song-select-modal" class="modal-overlay" onclick="closeModal('song-select-modal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="font-size: 1rem; color: var(--accent-color);">Pumili ng Kanta para sa <span id="modal-cat-name"></span></h3>
-            <div style="display: flex; gap: 6px;">
-                <input type="text" id="song-search-input" placeholder="Hanapin o i-type ang pangalan ng kanta..." oninput="filterSongsList()">
-                <button class="btn btn-primary btn-sm" onclick="openNewSongDirectModal()">+ New</button>
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pumili para sa <span id="modal-cat-name" style="color: var(--section);"></span></h3>
+                <button class="btn btn-sm btn-primary" onclick="openNewSongDirectModal()">+ New Song</button>
             </div>
-            <div id="songs-list-container" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
+            <input type="text" id="song-search-input" placeholder="Hanapin ang kanta..." oninput="filterSongsList()">
+            <div id="songs-list-container" style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;"></div>
             <button class="btn" onclick="closeModal('song-select-modal')">Cancel</button>
         </div>
     </div>
 
-    <!-- DIRECT NEW SONG & EDIT MODAL -->
-    <div id="song-edit-modal" class="modal-overlay" onclick="closeModal('song-edit-modal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="font-size: 1rem; color: var(--accent-color);" id="edit-modal-title">I-edit ang Kanta</h3>
-            <input type="text" id="edit-song-title" placeholder="Pamagat ng Kanta...">
-            <textarea id="edit-song-content" placeholder="Ilagay ang lyrics at chords (Gamitin ang [Verse 1], [Chorus], etc.)..." style="height: 160px; font-family: monospace; resize: none;"></textarea>
-            <div style="display: flex; gap: 8px;">
-                <button class="btn" style="flex:1;" onclick="closeModal('song-edit-modal')">Cancel</button>
-                <button class="btn btn-primary" style="flex:1;" onclick="saveSongDefinition()">Save Song</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SAVE LINE UP MODAL -->
+    <!-- SAVE LINEUP MODAL -->
     <div id="save-lineup-modal" class="modal-overlay" onclick="closeModal('save-lineup-modal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="font-size: 1rem; color: var(--success-color);">I-save ang Line Up sa Set List</h3>
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h3 style="color: var(--success);">Save to Set List</h3>
             <input type="text" id="wl-name-input" placeholder="Pangalan ng Worship Leader...">
             <input type="date" id="lineup-date-input">
             <div style="display: flex; gap: 8px;">
                 <button class="btn" style="flex:1;" onclick="closeModal('save-lineup-modal')">Cancel</button>
-                <button class="btn btn-success" style="flex:1;" onclick="confirmSaveLineUp()">Save to Set List</button>
+                <button class="btn btn-success" style="flex:1;" onclick="confirmSaveLineUp()">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- SET LIST MODAL -->
+    <!-- SET LISTS MODAL -->
     <div id="setlist-modal" class="modal-overlay" onclick="closeModal('setlist-modal')">
-        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 460px;">
-            <h3 style="font-size: 1rem; color: var(--success-color);">Naka-save na Set Lists</h3>
-            <div id="setlist-container" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;"></div>
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 440px;">
+            <h3 style="color: var(--success);">Naka-save na Set Lists</h3>
+            <div id="setlist-container" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
             <button class="btn" onclick="closeModal('setlist-modal')">Close</button>
         </div>
     </div>
 
     <!-- ADD CATEGORY MODAL -->
     <div id="add-cat-modal" class="modal-overlay" onclick="closeModal('add-cat-modal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="font-size: 1rem; color: var(--section-color);">Magdagdag ng Bagong Category</h3>
-            <input type="text" id="new-cat-name" placeholder="Pangalan ng Category (Hal: Special Number)...">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h3 style="color: var(--section);">Bagong Category</h3>
+            <input type="text" id="new-cat-name" placeholder="Pangalan (Hal: Special Number)...">
             <div style="display: flex; gap: 8px;">
                 <button class="btn" style="flex:1;" onclick="closeModal('add-cat-modal')">Cancel</button>
                 <button class="btn btn-primary" style="flex:1;" onclick="confirmAddCategory()">Add</button>
@@ -326,12 +450,12 @@
 
     <script>
         let categories = ["Opening", "Joyful", "Solemn", "Offerings", "Closing"];
-        let lineUpData = {}; // { CategoryName: { title, content } }
+        let lineUpData = {}; 
         let songsDatabase = JSON.parse(localStorage.getItem('worship_songs_db') || "{}");
         let setLists = JSON.parse(localStorage.getItem('worship_setlists') || "[]");
         
         let activeCategoryForSelection = null;
-        let activeEditingSongTitle = null;
+        let activePlayingCategory = null;
         let currentPlayingSong = { title: "", content: "", semitones: 0 };
         const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -344,9 +468,14 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             if (viewName === 'builder') {
                 document.getElementById('view-builder').classList.add('active');
+                document.getElementById('active-lineup-label').innerText = "Service Builder";
                 renderBuilderCategories();
             } else if (viewName === 'play') {
                 document.getElementById('view-play').classList.add('active');
+                document.getElementById('active-lineup-label').innerText = "Live Performance";
+            } else if (viewName === 'edit') {
+                document.getElementById('view-edit').classList.add('active');
+                document.getElementById('active-lineup-label').innerText = "Song Editor";
             }
         }
 
@@ -359,16 +488,14 @@
                 let card = document.createElement('div');
                 card.className = 'category-card';
                 card.innerHTML = `
-                    <div class="category-header">
-                        <span class="category-title">${cat}</span>
-                        <div style="display: flex; gap: 4px;">
-                            <button class="btn btn-sm btn-primary" onclick="openSongSelector('${cat}')">+ Add Song</button>
-                        </div>
+                    <div class="category-top">
+                        <span class="category-name">${cat}</span>
+                        <button class="btn btn-sm" onclick="openSongSelector('${cat}')">+ Add Song</button>
                     </div>
-                    <div class="assigned-song-display" onclick="${assigned ? `playAssignedSong('${cat}')` : `openSongSelector('${cat}')`}">
-                        <span>${assigned ? '🎵 ' + assigned.title : '+ Pindutin para maglagay ng kanta'}</span>
-                        ${assigned ? `<div style="display:flex; gap:4px;" onclick="event.stopPropagation()">
-                            <button class="btn btn-sm" onclick="openEditAssignedSong('${cat}')">Edit</button>
+                    <div class="song-slot ${assigned ? 'song-slot-filled' : ''}" onclick="${assigned ? `playAssignedSong('${cat}')` : `openSongSelector('${cat}')`}">
+                        <div class="song-title-text">${assigned ? '🎵 ' + assigned.title : '<span style="color:var(--text-muted); font-size:0.8rem; font-style:italic;">Walang kanta pang nailagay...</span>'}</div>
+                        ${assigned ? `<div class="slot-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-sm" onclick="openEditorForCategory('${cat}')">Edit</button>
                             <button class="btn btn-sm btn-danger" onclick="clearCategorySong('${cat}')">X</button>
                         </div>` : ''}
                     </div>
@@ -377,7 +504,6 @@
             });
         }
 
-        /* --- SONG SELECTOR & ASSIGN --- */
         function openSongSelector(cat) {
             activeCategoryForSelection = cat;
             document.getElementById('modal-cat-name').innerText = cat;
@@ -394,11 +520,10 @@
                 if (title.toLowerCase().includes(filter.toLowerCase()) || filter === "") {
                     found = true;
                     let item = document.createElement('div');
-                    item.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 8px; border-radius: 6px;";
+                    item.className = 'song-item-row';
                     item.innerHTML = `
-                        <span style="font-size: 0.85rem; cursor:pointer; flex:1;" onclick="selectSongForCategory('${title}')">🎵 ${title}</span>
+                        <span style="font-size: 0.85rem; font-weight: 500; cursor:pointer; flex:1;" onclick="selectSongForCategory('${title}')">🎵 ${title}</span>
                         <div style="display:flex; gap:4px;">
-                            <button class="btn btn-sm" onclick="openEditExistingSong('${title}')">Edit</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteSongFromDb('${title}')">Del</button>
                         </div>
                     `;
@@ -406,21 +531,17 @@
                 }
             }
             if (!found) {
-                listContainer.innerHTML = `<span style="font-size: 0.8rem; color: #94a3b8; text-align:center; padding: 10px;">Walang nakitang kanta. I-click ang '+ New' para gumawa.</span>`;
+                listContainer.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); text-align:center; padding: 12px; font-style:italic;">Walang nakitang kanta sa database.</span>`;
             }
         }
 
         function filterSongsList() {
-            let query = document.getElementById('song-search-input').value;
-            renderSongsListModal(query);
+            renderSongsListModal(document.getElementById('song-search-input').value);
         }
 
         function selectSongForCategory(title) {
             if (songsDatabase[title]) {
-                lineUpData[activeCategoryForSelection] = {
-                    title: title,
-                    content: songsDatabase[title]
-                };
+                lineUpData[activeCategoryForSelection] = { title: title, content: songsDatabase[title] };
                 closeModal('song-select-modal');
                 renderBuilderCategories();
             }
@@ -431,72 +552,65 @@
             renderBuilderCategories();
         }
 
-        /* --- EDIT & NEW SONG MODAL --- */
         function openNewSongDirectModal() {
             closeModal('song-select-modal');
-            activeEditingSongTitle = null;
-            document.getElementById('edit-modal-title').innerText = "Gumawa ng Bagong Kanta";
-            document.getElementById('edit-song-title').value = "";
-            document.getElementById('edit-song-content').value = "";
-            document.getElementById('song-edit-modal').style.display = 'flex';
+            activePlayingCategory = null;
+            document.getElementById('edit-song-title-label').innerText = "Bagong Kanta";
+            document.getElementById('editor-textarea').value = "[Verse 1]\n\n[Chorus]\n";
+            switchView('edit');
         }
 
-        function openEditExistingSong(title) {
-            closeModal('song-select-modal');
-            activeEditingSongTitle = title;
-            document.getElementById('edit-modal-title').innerText = "I-edit ang Kanta: " + title;
-            document.getElementById('edit-song-title').value = title;
-            document.getElementById('edit-song-content').value = songsDatabase[title];
-            document.getElementById('song-edit-modal').style.display = 'flex';
-        }
-
-        function openEditAssignedSong(cat) {
+        function openEditorForCategory(cat) {
+            activePlayingCategory = cat;
             let song = lineUpData[cat];
             if (!song) return;
-            activeEditingSongTitle = song.title;
-            document.getElementById('edit-modal-title').innerText = "I-edit ang Kanta: " + song.title;
-            document.getElementById('edit-song-title').value = song.title;
-            document.getElementById('edit-song-content').value = song.content;
-            document.getElementById('song-edit-modal').style.display = 'flex';
+            document.getElementById('edit-song-title-label').innerText = "I-edit: " + song.title;
+            // Isasama natin ang pamagat sa itaas ng textarea para madali ma-edit o ma-save
+            document.getElementById('editor-textarea').value = `[${song.title}]\n\n` + song.content;
+            switchView('edit');
         }
 
-        function saveSongDefinition() {
-            let title = document.getElementById('edit-song-title').value.trim();
-            let content = document.getElementById('edit-song-content').value.trim();
-            if (!title || !content) {
-                alert("Mangyaring punan ang pamagat at ang nilalaman.");
-                return;
-            }
+        function openEditorFromPlay() {
+            if (!activePlayingCategory) return;
+            openEditorForCategory(activePlayingCategory);
+        }
 
-            if (activeEditingSongTitle && activeEditingSongTitle !== title) {
-                delete songsDatabase[activeEditingSongTitle];
+        function exitEditMode() {
+            if (activePlayingCategory) {
+                switchView('play');
+            } else {
+                switchView('builder');
             }
+        }
+
+        function saveActiveSongChanges() {
+            let fullText = document.getElementById('editor-textarea').value.trim();
+            if (!fullText) { alert("Walang nilalaman ang kanta."); return; }
+
+            // Kunin ang pamagat mula sa unang bracket [Title] kung mayroon, o gamitin default
+            let firstLineMatch = fullText.match(/^\[(.*?)\]/);
+            let title = firstLineMatch ? firstLineMatch[1] : "Untitled Song";
+            
+            // Tanggalin ang title block sa simula para maging purong lyrics & chords ang content
+            let content = fullText.replace(/^\[.*?\]\s*/, "").trim();
 
             songsDatabase[title] = content;
             localStorage.setItem('worship_songs_db', JSON.stringify(songsDatabase));
 
-            // Update din sa active line up kung nandoon man
-            for (let cat in lineUpData) {
-                if (lineUpData[cat].title === activeEditingSongTitle || lineUpData[cat].title === title) {
-                    lineUpData[cat] = { title: title, content: content };
-                }
-            }
-
-            closeModal('song-edit-modal');
-            renderBuilderCategories();
-            if (activeCategoryForSelection) openSongSelector(activeCategoryForSelection);
-        }
-
-        function deleteSongFromDb(title) {
-            if (confirm(`Burahin ang "${title}" sa database?`)) {
-                delete songsDatabase[title];
-                localStorage.setItem('worship_songs_db', JSON.stringify(songsDatabase));
-                renderSongsListModal("");
+            if (activePlayingCategory) {
+                lineUpData[activePlayingCategory] = { title: title, content: content };
+                currentPlayingSong = { title: title, content: content, semitones: 0 };
+                document.getElementById('play-song-title').innerText = title;
+                renderPlayScreen();
+                switchView('play');
+            } else {
+                renderBuilderCategories();
+                switchView('builder');
             }
         }
 
-        /* --- PLAY VIEW & JUMPER --- */
         function playAssignedSong(cat) {
+            activePlayingCategory = cat;
             let song = lineUpData[cat];
             if (!song) return;
             currentPlayingSong = { title: song.title, content: song.content, semitones: 0 };
@@ -517,8 +631,8 @@
 
         function renderPlayScreen() {
             const lyricsBox = document.getElementById('play-lyrics-box');
-            const jumperPane = document.getElementById('play-jumper-pane');
-            jumperPane.innerHTML = '<span style="font-size: 0.7rem; color: #94a3b8; font-weight: bold; text-align: center;">JUMPER</span>';
+            const jumperBar = document.getElementById('floating-jumper-bar');
+            jumperBar.innerHTML = '<span style="font-size: 0.65rem; color: var(--text-muted); align-self: center; font-weight: bold;">JUMP:</span>';
             document.getElementById('trans-val').innerText = currentPlayingSong.semitones > 0 ? `+${currentPlayingSong.semitones}` : currentPlayingSong.semitones;
 
             const lines = currentPlayingSong.content.split('\n');
@@ -543,13 +657,12 @@
                     htmlOutput += `<div id="${id}" class="song-part-block">\n`;
                     htmlOutput += `<span class="song-part-title" onclick="jumpToBlock('${id}')">[${label}]</span>\n`;
 
-                    // Button sa right-side jumper pane
-                    let jBtn = document.createElement('button');
-                    jBtn.className = 'btn btn-sm';
-                    jBtn.style.fontSize = '0.7rem';
-                    jBtn.innerText = label;
-                    jBtn.onclick = () => jumpToBlock(id);
-                    jumperPane.appendChild(jBtn);
+                    // Floating Jumper Chip sa ibaba
+                    let jChip = document.createElement('button');
+                    jChip.className = 'jumper-chip';
+                    jChip.innerText = label;
+                    jChip.onclick = () => jumpToBlock(id);
+                    jumperBar.appendChild(jChip);
 
                     partCounter++;
                     insideBlock = true;
@@ -566,14 +679,19 @@
             lyricsBox.innerHTML = htmlOutput;
         }
 
+        // Line-Count Dynamic Centering batay sa buong haba ng bloke
         function jumpToBlock(blockId) {
             document.querySelectorAll('.song-part-block').forEach(el => el.classList.remove('active-block'));
             const target = document.getElementById(blockId);
             const box = document.getElementById('play-lyrics-box');
             if (target && box) {
                 target.classList.add('active-block');
-                const centerScroll = target.offsetTop - (box.clientHeight / 2) + (target.offsetHeight / 2);
-                box.scrollTo({ top: centerScroll, behavior: 'smooth' });
+                const blockTop = target.offsetTop;
+                const blockHeight = target.offsetHeight;
+                const boxHeight = box.clientHeight;
+                
+                const exactCenterScroll = blockTop - (boxHeight / 2) + (blockHeight / 2);
+                box.scrollTo({ top: exactCenterScroll, behavior: 'smooth' });
             }
         }
 
@@ -582,53 +700,44 @@
             renderPlayScreen();
         }
 
-        /* --- SAVE LINE UP & SET LIST --- */
-        function openSaveModal() {
-            document.getElementById('save-lineup-modal').style.display = 'flex';
+        function deleteSongFromDb(title) {
+            if (confirm(`Burahin ang "${title}"?`)) {
+                delete songsDatabase[title];
+                localStorage.setItem('worship_songs_db', JSON.stringify(songsDatabase));
+                renderSongsListModal("");
+            }
         }
+
+        function openSaveModal() { document.getElementById('save-lineup-modal').style.display = 'flex'; }
 
         function confirmSaveLineUp() {
             let wlName = document.getElementById('wl-name-input').value.trim();
             let dateVal = document.getElementById('lineup-date-input').value;
+            if (!wlName || !dateVal) { alert("Ilagay ang pangalan ng Worship Leader at petsa."); return; }
 
-            if (!wlName || !dateVal) {
-                alert("Mangyaring ilagay ang Pangalan ng Worship Leader at ang Petsa.");
-                return;
-            }
-
-            let newSetList = {
-                id: Date.now(),
-                worshipLeader: wlName,
-                date: dateVal,
-                lineup: { ...lineUpData }
-            };
-
-            setLists.unshift(newSetList);
+            setLists.unshift({ id: Date.now(), worshipLeader: wlName, date: dateVal, lineup: { ...lineUpData } });
             localStorage.setItem('worship_setlists', JSON.stringify(setLists));
             closeModal('save-lineup-modal');
-            alert("Matagumpay na na-save ang Line Up sa Set List!");
+            alert("Matagumpay na nai-save ang Set List!");
         }
 
-        function openSetListModal() {
-            renderSetLists();
-            document.getElementById('setlist-modal').style.display = 'flex';
-        }
+        function openSetListModal() { renderSetLists(); document.getElementById('setlist-modal').style.display = 'flex'; }
 
         function renderSetLists() {
             const container = document.getElementById('setlist-container');
             container.innerHTML = "";
             if (setLists.length === 0) {
-                container.innerHTML = `<span style="font-size: 0.85rem; color: #94a3b8; text-align: center;">Wala pang naka-save na Set List.</span>`;
+                container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted); text-align:center; font-style:italic; padding: 10px;">Walang naka-save na Set List.</span>`;
                 return;
             }
 
             setLists.forEach((sl, index) => {
                 let div = document.createElement('div');
-                div.className = 'setlist-item';
+                div.className = 'setlist-card';
                 div.innerHTML = `
                     <div>
-                        <strong style="color: var(--success-color); font-size: 0.85rem; display:block;">📅 ${sl.date} — WL: ${sl.worshipLeader}</strong>
-                        <span style="font-size: 0.75rem; color: #94a3b8;">(${Object.keys(sl.lineup).length} kanta ang nakalista)</span>
+                        <strong style="color: var(--success); font-size: 0.82rem; display:block;">📅 ${sl.date} — WL: ${sl.worshipLeader}</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">${Object.keys(sl.lineup).length} kanta ang nakalista</span>
                     </div>
                     <div style="display:flex; gap:4px;">
                         <button class="btn btn-sm btn-primary" onclick="loadSetList(${index})">Load</button>
@@ -645,31 +754,14 @@
                 lineUpData = { ...sl.lineup };
                 closeModal('setlist-modal');
                 renderBuilderCategories();
-                alert(`Na-load ang Set List noong ${sl.date} (WL: ${sl.worshipLeader})`);
+                alert(`Na-load ang Set List noong ${sl.date}`);
             }
         }
 
-        function deleteSetList(index) {
-            if (confirm("Burahin ang Set List na ito?")) {
-                setLists.splice(index, 1);
-                localStorage.setItem('worship_setlists', JSON.stringify(setLists));
-                renderSetLists();
-            }
-        }
-
-        /* --- ADD CATEGORY --- */
-        function openAddCategoryModal() {
-            document.getElementById('new-cat-name').value = "";
-            document.getElementById('add-cat-modal').style.display = 'flex';
-        }
-
+        function openAddCategoryModal() { document.getElementById('new-cat-name').value = ""; document.getElementById('add-cat-modal').style.display = 'flex'; }
         function confirmAddCategory() {
-            let catName = document.getElementById('new-cat-name').value.trim();
-            if (catName && !categories.includes(catName)) {
-                categories.push(catName);
-                closeModal('add-cat-modal');
-                renderBuilderCategories();
-            }
+            let name = document.getElementById('new-cat-name').value.trim();
+            if (name && !categories.includes(name)) { categories.push(name); closeModal('add-cat-modal'); renderBuilderCategories(); }
         }
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
