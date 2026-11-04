@@ -325,70 +325,77 @@ header {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Play View Layout with Right-Side Jumper Panel */
+/* Play View Layout with Floating Translucent Floating Jumper Bar */
 .play-workspace {
     display: flex;
     flex: 1;
     position: relative;
     overflow: hidden;
     min-height: 0;
+    justify-content: center;
 }
 
 .output-box {
-    flex: 1;
-    padding: 16px;
+    width: 100%;
+    max-width: 650px; /* Centered max container for clean reading */
+    margin: 0 auto;
+    padding: 16px 20px;
     overflow-y: auto;
     overflow-x: hidden;
     font-family: monospace;
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: clamp(0.75rem, 2.2vw, 0.95rem); /* Auto-compress if text length/width is too long */
+    line-height: 1.4;
     white-space: pre-wrap;
     word-break: break-word;
     scroll-behavior: smooth;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
+    text-align: left;
 }
 
+/* Floating Translucent Jumper Icons on Right Edge */
 .play-right-bar {
-    width: 90px;
-    background: #131b2e;
-    border-left: 1px solid var(--panel-border);
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    max-height: 75vh;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 8px 6px;
+    gap: 5px;
+    padding: 6px 4px;
     overflow-y: auto;
     overflow-x: hidden;
-    flex-shrink: 0;
     z-index: 99;
+    background: rgba(19, 27, 46, 0.45);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
     -webkit-overflow-scrolling: touch;
 }
 
 .play-right-bar::-webkit-scrollbar {
-    width: 4px;
-}
-
-.play-right-bar::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 4px;
+    display: none;
 }
 
 .jumper-chip {
-    background: #1e293b;
+    background: rgba(30, 41, 59, 0.65);
     color: var(--section);
-    border: 1px solid #334155;
-    padding: 8px 6px;
-    border-radius: 8px;
-    font-size: 0.7rem;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 6px 8px;
+    border-radius: 12px;
+    font-size: 0.62rem;
     font-weight: bold;
     text-align: center;
-    width: 100%;
+    width: 64px;
     cursor: pointer;
     text-transform: uppercase;
     flex-shrink: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .jumper-chip:active,
@@ -403,11 +410,12 @@ header {
     font-weight: bold;
 }
 
+/* Reduced spacing between song-part title and content */
 .song-part-block {
     display: block;
-    margin-top: 14px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    margin-top: 8px;
+    padding: 4px 0 8px 0;
+    border-radius: 6px;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     border: 1px solid transparent;
 }
@@ -416,10 +424,10 @@ header {
     color: var(--section);
     font-weight: bold;
     text-transform: uppercase;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     cursor: pointer;
     display: inline-block;
-    margin-bottom: 4px;
+    margin-bottom: 1px;
 }
 
 .song-part-content {
@@ -429,9 +437,9 @@ header {
 }
 
 .song-part-block.active-block {
-    background-color: rgba(250, 204, 21, 0.18) !important;
-    border-left: 5px solid var(--highlight) !important;
-    border-color: rgba(250, 204, 21, 0.3);
+    background-color: rgba(250, 204, 21, 0.12) !important;
+    border-left: 3px solid var(--highlight) !important;
+    padding-left: 6px;
 }
 
 .song-part-block.active-block .song-part-title {
@@ -460,7 +468,14 @@ header {
     }
 
     .play-right-bar {
-        width: 80px;
+        right: 4px;
+        padding: 4px 2px;
+    }
+
+    .jumper-chip {
+        width: 54px;
+        font-size: 0.58rem;
+        padding: 5px 4px;
     }
 }
 </style>
@@ -1057,7 +1072,6 @@ function formatChordLine(line) {
 
 /* ==========================================
    RENDER PLAY SCREEN
-   EXCLUSIVELY CREATES CHIPS FOR DETECTED SECTIONS
 ========================================== */
 
 function renderPlayScreen() {
@@ -1131,8 +1145,6 @@ function renderPlayScreen() {
 
         } else {
 
-            // Only output content lines under a detected block header.
-            // If lyrics start before any heading, skip or handle gracefully without forcing phantom sections.
             if (insideBlock) {
                 htmlOutput += formatChordLine(line) + "\n";
             }
