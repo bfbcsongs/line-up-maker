@@ -325,6 +325,11 @@ header {
     -webkit-overflow-scrolling: touch;
 }
 
+/* Placeholder styling for empty add song screen */
+.editor-textarea::placeholder {
+    color: #64748b;
+}
+
 /* Play View Workspace */
 .play-workspace {
     display: flex;
@@ -348,7 +353,7 @@ header {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Floating Translucent Jumper Bar directly positioned over the right margin */
+/* Floating Translucent Jumper Bar */
 .play-right-bar {
     position: absolute;
     right: 8px;
@@ -536,17 +541,7 @@ header {
 
             <textarea id="editor-textarea"
                       class="editor-textarea"
-                      placeholder="[Intro]
-
-C    G
-
-[Verse 1]
-C    G
-Paste Lyrics & Chords here...
-
-[Chorus]
-F    C
-Chorus lyrics here..."></textarea>
+                      placeholder="PASTE CHORDS AND LYRICS HERE"></textarea>
 
         </div>
     </div>
@@ -714,6 +709,22 @@ Chorus lyrics here..."></textarea>
         <button class="btn btn-primary" onclick="confirmAddCategory()">Add</button>
         <button class="btn" onclick="closeModal('add-cat-modal')">Cancel</button>
 
+    </div>
+</div>
+
+<!-- MODIFICATION 2: SONG TITLE MODAL FOR ADD SONG -->
+<div id="add-song-title-modal" class="drawer-overlay" onclick="closeModal('add-song-title-modal')">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+        <h3 style="color:var(--accent); font-size:0.95rem;">Enter Song Title</h3>
+        <div style="display:flex; gap:6px; align-items:center;">
+            <input type="text"
+                   id="modal-new-song-title-input"
+                   placeholder="Song Title..."
+                   style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none; flex:1;"
+                   onkeydown="if(event.key==='Enter') submitAddSongTitleModal()">
+            <button class="btn btn-primary btn-sm" onclick="submitAddSongTitleModal()" style="padding: 8px 12px;">↵</button>
+        </div>
+        <button class="btn" onclick="closeModal('add-song-title-modal')">Cancel</button>
     </div>
 </div>
 
@@ -933,7 +944,7 @@ function closeModal(modalId) {
 
 
 /* ==========================================
-   TRANSPOSE
+   MODIFICATION 1: TRANSPOSE FEATURE FIX
 ========================================== */
 
 function transposeGlobal(amount) {
@@ -945,6 +956,7 @@ function transposeGlobal(amount) {
             ? "+" + globalSemitones
             : globalSemitones;
 
+    // Only re-render if we are currently looking at the play screen, avoiding unwanted view switching or resetting other screens
     if (document.getElementById("view-play").classList.contains("active")) {
         renderPlayScreen();
     }
@@ -986,7 +998,7 @@ function transposeNote(chord, semitones) {
 
 
 /* ==========================================
-   SMART SONG PART DETECTOR
+   MODIFICATION 4 & 5: SMART SONG PART DETECTOR (CASE-INSENSITIVE & BRACKET-AGNOSTIC)
 ========================================== */
 
 function isSongPartHeading(line) {
@@ -995,6 +1007,7 @@ function isSongPartHeading(line) {
 
     if (!text) return null;
 
+    // Remove brackets and optional colon from start/end
     text = text.replace(/^\[(.*?)\]$/, "$1").trim();
     text = text.replace(/:$/, "").trim();
 
@@ -1268,7 +1281,7 @@ function jumpToBlock(id) {
 
 
 /* ==========================================
-   SET LIST
+   MODIFICATION 1: SET LIST LOAD FUNCTIONALITY
 ========================================== */
 
 function renderSetList() {
@@ -1533,42 +1546,46 @@ function renderSongsDatabase() {
 
 
 /* ==========================================
-   ADD / EDIT SONG
+   MODIFICATION 2 & 3: ADD SONG MODAL & EMPTY EDIT SCREEN
 ========================================== */
 
 function openAddSongModal() {
+    // Open modal to capture song title first
+    document.getElementById("modal-new-song-title-input").value = "";
+    document.getElementById("add-song-title-modal").style.display = "flex";
+    setTimeout(() => {
+        document.getElementById("modal-new-song-title-input").focus();
+    }, 100);
+}
 
-    activeEditingKey = null;
+function submitAddSongTitleModal() {
+    const titleInput = document.getElementById("modal-new-song-title-input");
+    const title = titleInput.value.trim();
 
-    document.getElementById("edit-song-title-label").textContent = "Add New Song";
+    if (!title) {
+        alert("Please enter a song title.");
+        return;
+    }
 
-    document.getElementById("editor-textarea").value =
-`[Untitled Song]
+    closeModal("add-song-title-modal");
 
-[Intro]
-C   G
+    activeEditingKey = null; // New song
 
-[Verse 1]
-C   G
-Lyrics here...
+    document.getElementById("edit-song-title-label").textContent = title;
 
-[Chorus]
-F   C
-Chorus lyrics here...`;
+    // Empty text area with specified placeholder text
+    document.getElementById("editor-textarea").value = "";
 
     switchView("edit");
-
 }
 
 function openEditSongDirect(title) {
 
     activeEditingKey = title;
 
-    document.getElementById("edit-song-title-label").textContent =
-        "Edit: " + title;
+    document.getElementById("edit-song-title-label").textContent = title;
 
-    document.getElementById("editor-textarea").value =
-        `[${title}]\n\n` + (songsDatabase[title] || "");
+    document.getElementById("editor-textarea").value = songsDatabase[title] || "";
 
     switchView("edit");
 
@@ -1597,13 +1614,11 @@ async function saveSongFromEditor() {
 
     if (!window.fbDB) return alert("Firebase is not connected.");
 
-    const match = text.match(/^\[(.*?)\]/);
+    const title = document.getElementById("edit-song-title-label").textContent.trim();
 
-    const title = match ? match[1].trim() : "Untitled";
+    if (!title || title === "Edit Song") return alert("Invalid song title.");
 
-    if (!title) return alert("Please enter a song title.");
-
-    const content = text.replace(/^\[.*?\]\s*/, "").trim();
+    const content = text;
 
     const newKey = safeKey(title);
 
