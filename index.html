@@ -336,11 +336,11 @@ header {
 
 .output-box {
     flex: 1;
-    padding: 12px 75px 12px 12px; /* Extra right padding so text doesn't slide under jumper */
+    padding: 12px 16px;
     overflow-y: auto;
     overflow-x: hidden;
     font-family: monospace;
-    font-size: 0.95rem; /* Default standard size */
+    font-size: 0.95rem;
     line-height: 1.35;
     white-space: pre;
     scroll-behavior: smooth;
@@ -348,13 +348,13 @@ header {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Floating Translucent Jumper Bar */
+/* Floating Translucent Jumper Bar directly positioned over the right margin */
 .play-right-bar {
     position: absolute;
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    max-height: 80vh;
+    max-height: 75vh;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -362,9 +362,10 @@ header {
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 99;
-    background: rgba(19, 27, 46, 0.45);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(19, 27, 46, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 14px;
     -webkit-overflow-scrolling: touch;
 }
@@ -374,9 +375,9 @@ header {
 }
 
 .jumper-chip {
-    background: rgba(30, 41, 59, 0.65);
+    background: rgba(30, 41, 59, 0.4);
     color: var(--section);
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.15);
     padding: 6px 4px;
     border-radius: 10px;
     font-size: 0.6rem;
@@ -390,7 +391,9 @@ header {
     text-overflow: ellipsis;
     white-space: nowrap;
     backdrop-filter: blur(2px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    -webkit-backdrop-filter: blur(2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .jumper-chip:active,
@@ -417,8 +420,8 @@ header {
 }
 
 .song-part-title-wrapper {
-    text-align: center; /* Center section names like [CHORUS] */
-    margin-bottom: 2px; /* Close distance to chords/lyrics below */
+    text-align: center;
+    margin-bottom: 2px;
 }
 
 .song-part-title {
@@ -526,7 +529,7 @@ header {
 
             <div class="edit-topbar">
 
-                <button class="btn btn-sm" onclick="switchView('home')">⬅ Back</button>
+                <button class="btn btn-sm" onclick="goBackFromEdit()">⬅ Back</button>
 
                 <span id="edit-song-title-label"
                       style="font-weight:bold; color:var(--accent);">
@@ -564,7 +567,7 @@ Chorus lyrics here..."></textarea>
 
             <div class="edit-topbar">
 
-                <button class="btn btn-sm" onclick="switchView('home')">⬅ Back</button>
+                <button class="btn btn-sm" onclick="goBackFromPlay()">⬅ Back</button>
 
                 <span id="play-song-title"
                       style="font-weight:bold; color:var(--section);">
@@ -726,7 +729,7 @@ Chorus lyrics here..."></textarea>
 
 <script>
 /* ==========================================
-   GLOBAL VARIABLES
+   GLOBAL VARIABLES & HISTORY TRACKING
 ========================================== */
 
 let categories = ["Opening", "Joyful", "Solemn", "Offering", "Closing"];
@@ -741,6 +744,9 @@ let globalSemitones = 0;
 let activeEditingKey = null;
 let currentPlayingSong = { title: "", content: "" };
 let activeCategoryToAssign = null;
+
+// History navigation stack to support going back to the exact previous view/context
+let viewHistory = ["home"];
 
 const notesSharp = [
     "C", "C#", "D", "D#", "E", "F",
@@ -866,7 +872,7 @@ function initializeFirebase() {
 
 
 /* ==========================================
-   GENERAL HELPERS
+   GENERAL HELPERS & VIEW ROUTING
 ========================================== */
 
 function escapeHTML(value) {
@@ -887,24 +893,44 @@ function getSongKey(title) {
     return songKeys[title] || safeKey(title);
 }
 
-function switchView(viewName) {
-
+function switchView(viewName, pushHistory = true) {
     document.querySelectorAll(".view-section").forEach(el => {
         el.classList.remove("active");
     });
 
     document.getElementById("view-" + viewName).classList.add("active");
 
+    if (pushHistory) {
+        const currentTop = viewHistory[viewHistory.length - 1];
+        if (currentTop !== viewName) {
+            viewHistory.push(viewName);
+        }
+    }
+}
+
+function goBack() {
+    if (viewHistory.length > 1) {
+        viewHistory.pop(); // Remove current view
+        const previousView = viewHistory[viewHistory.length - 1]; // Get previous view
+        switchView(previousView, false);
+    } else {
+        switchView("home", false);
+    }
+}
+
+function goBackFromEdit() {
+    goBack();
+}
+
+function goBackFromPlay() {
+    goBack();
 }
 
 function openDrawer(drawerId) {
-
     document.querySelectorAll(".drawer-overlay").forEach(el => {
         el.style.display = "none";
     });
-
     document.getElementById(drawerId).style.display = "flex";
-
 }
 
 function closeDrawer(drawerId) {
@@ -1076,32 +1102,24 @@ function autoScaleContent() {
     const box = document.getElementById("play-lyrics-box");
     if (!box) return;
 
-    // Reset back to standard readable baseline font size first
     box.style.fontSize = "0.95rem";
 
-    const availableWidth = box.clientWidth - 85; // Available screen width inside box
+    const availableWidth = box.clientWidth - 20;
 
     if (availableWidth <= 0) return;
 
     let maxLineWidth = 0;
 
-    // Measure maximum scroll width of song content blocks
     box.querySelectorAll(".song-part-content").forEach(el => {
         if (el.scrollWidth > maxLineWidth) {
             maxLineWidth = el.scrollWidth;
         }
     });
 
-    // Compress font size ONLY IF text expands beyond the readable screen bounds
     if (maxLineWidth > availableWidth) {
-
         const scaleRatio = availableWidth / maxLineWidth;
-
         let newFontSize = 0.95 * scaleRatio;
-
-        // Apply dynamic scale down (minimum safety cap at 0.6rem)
         box.style.fontSize = Math.max(0.6, newFontSize).toFixed(2) + "rem";
-
     }
 
 }
@@ -1208,7 +1226,6 @@ function renderPlayScreen() {
         chip.classList.remove("selected");
     });
 
-    // Execute scale detection right after rendering DOM
     requestAnimationFrame(autoScaleContent);
 
 }
