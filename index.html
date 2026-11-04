@@ -508,17 +508,9 @@ header {
     <!-- HOME -->
     <div id="view-home" class="view-section active">
 
-        <div class="active-lineup-screen">
-            <div class="screen-header">
-                <span>Active Line-up</span>
-                <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
-            </div>
-
-            <div id="canvas-active-categories" style="display: flex; flex-direction: column; gap: 8px;">
-                <!-- Dynamically rendered categories go here -->
-            </div>
+        <div class="active-lineup-screen" style="justify-content: center; align-items: center;">
+            <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 30px; border-radius: 12px;" onclick="openDrawer('drawer-setlist')">Start Jam</button>
         </div>
-
     </div>
 
     <!-- EDIT -->
@@ -786,7 +778,6 @@ function initializeFirebase() {
             });
 
             renderSongsDatabase();
-            renderActiveLineUpCanvas();
             renderNewLineUpForm();
 
         },
@@ -820,7 +811,6 @@ function initializeFirebase() {
                 });
 
                 renderSongsDatabase();
-                renderActiveLineUpCanvas();
                 renderNewLineUpForm();
 
             }).catch(console.error);
@@ -830,16 +820,20 @@ function initializeFirebase() {
     );
 
 
-    // SAVED SET LISTS
+    // SAVED SET LISTS (Normalized to handle Firebase array/object conversion safely)
     window.fbOnValue(
         window.fbRef(window.fbDB, "worship_setlists"),
         snapshot => {
 
             const data = snapshot.val();
 
-            setLists = snapshot.exists()
-                ? (Array.isArray(data) ? data : Object.values(data))
-                : [];
+            if (!data) {
+                setLists = [];
+            } else if (Array.isArray(data)) {
+                setLists = data.filter(Boolean);
+            } else {
+                setLists = Object.values(data).filter(Boolean);
+            }
 
             renderSetList();
 
@@ -859,7 +853,6 @@ function initializeFirebase() {
                 categories = saved;
             }
 
-            renderActiveLineUpCanvas();
             renderNewLineUpForm();
 
         },
@@ -1282,6 +1275,7 @@ function jumpToBlock(id) {
 function renderSetList() {
 
     const container = document.getElementById("setlist-container");
+    if (!container) return;
 
     container.innerHTML = "";
 
@@ -1333,140 +1327,9 @@ function loadSetListToActive(index) {
     if (sl && sl.lineup) {
 
         activeLineUp = { ...sl.lineup };
-
-        renderActiveLineUpCanvas();
-
-        alert("Loaded Line-up: " + sl.worshipLeader);
+        alert("Loaded Line-up for: " + sl.worshipLeader);
 
     }
-
-}
-
-
-/* ==========================================
-   ACTIVE LINEUP
-========================================== */
-
-function renderActiveLineUpCanvas() {
-
-    const container = document.getElementById("canvas-active-categories");
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    categories.forEach(cat => {
-
-        const songTitle = activeLineUp[cat];
-
-        const row = document.createElement("div");
-
-        row.className = "category-row";
-
-        const label = document.createElement("span");
-
-        label.className = "cat-label";
-        label.textContent = "♦️ " + cat + ":";
-
-        const title = document.createElement("span");
-
-        title.className = "cat-song-title";
-
-        if (songTitle) {
-
-            title.textContent = "🎵 " + songTitle;
-            title.onclick = () => playSong(songTitle);
-
-        } else {
-
-            title.textContent = "Tap to assign song";
-            title.style.color = "var(--text-muted)";
-            title.style.fontStyle = "italic";
-            title.onclick = () => openSelectSongModal(cat);
-
-        }
-
-        const actions = document.createElement("div");
-
-        actions.style.cssText = "display:flex;gap:4px;";
-
-        if (songTitle) {
-
-            const edit = document.createElement("button");
-
-            edit.className = "btn btn-sm";
-            edit.textContent = "Edit";
-            edit.onclick = () => openEditSongDirect(songTitle);
-
-            actions.appendChild(edit);
-
-        }
-
-        const change = document.createElement("button");
-
-        change.className = "btn btn-sm btn-primary";
-        change.textContent = songTitle ? "Change" : "+Select";
-
-        change.onclick = () => openSelectSongModal(cat);
-
-        actions.appendChild(change);
-
-        row.append(label, title, actions);
-
-        container.appendChild(row);
-
-    });
-
-}
-
-
-/* ==========================================
-   SELECT SONG
-========================================== */
-
-function openSelectSongModal(cat) {
-
-    activeCategoryToAssign = cat;
-
-    document.getElementById("select-modal-cat").textContent = cat;
-
-    const list = document.getElementById("modal-songs-list");
-
-    list.innerHTML = "";
-
-    const titles = Object.keys(songsDatabase).sort();
-
-    if (titles.length === 0) {
-
-        list.innerHTML =
-            '<span class="empty-message">No songs in database.</span>';
-
-    }
-
-    titles.forEach(title => {
-
-        const div = document.createElement("div");
-
-        div.style.cssText =
-            "background:#0f172a;padding:8px;border-radius:6px;cursor:pointer;font-size:0.85rem;color:#fff;";
-
-        div.textContent = "🎵 " + title;
-
-        div.onclick = () => {
-
-            activeLineUp[cat] = title;
-
-            closeModal("select-song-modal");
-
-            renderActiveLineUpCanvas();
-
-        };
-
-        list.appendChild(div);
-
-    });
-
-    document.getElementById("select-song-modal").style.display = "flex";
 
 }
 
@@ -1790,14 +1653,16 @@ async function saveNewLineUpFromForm() {
 
     try {
 
-        setLists.unshift({
+        const currentLists = Array.isArray(setLists) ? [...setLists] : [];
+
+        currentLists.unshift({
             worshipLeader: wlName,
             lineup: tempLineup
         });
 
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_setlists"),
-            setLists
+            currentLists
         );
 
         document.getElementById("new-wl-name").value = "";
@@ -1833,14 +1698,16 @@ async function confirmSaveActiveLineUp() {
 
     try {
 
-        setLists.unshift({
+        const currentLists = Array.isArray(setLists) ? [...setLists] : [];
+
+        currentLists.unshift({
             worshipLeader: wlName,
             lineup: { ...activeLineUp }
         });
 
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_setlists"),
-            setLists
+            currentLists
         );
 
         document.getElementById("save-wl-input").value = "";
@@ -1950,7 +1817,6 @@ async function confirmAddCategory() {
 
         input.value = "";
 
-        renderActiveLineUpCanvas();
         renderNewLineUpForm();
 
         closeModal("add-cat-modal");
@@ -1972,7 +1838,6 @@ async function confirmAddCategory() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    renderActiveLineUpCanvas();
     renderNewLineUpForm();
     renderSetList();
 
