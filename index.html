@@ -508,17 +508,8 @@ header {
     <!-- HOME -->
     <div id="view-home" class="view-section active">
 
-        <div class="active-lineup-screen">
-
-            <div class="screen-header">
-                <span>Active Line-up</span>
-                <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
-            </div>
-
-            <div id="canvas-active-categories"
-                 style="display:flex; flex-direction:column; gap:8px;">
-            </div>
-
+        <div class="active-lineup-screen" style="justify-content: center; align-items: center;">
+            <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 30px; border-radius: 12px;" onclick="openDrawer('drawer-setlist')">Start Jam</button>
         </div>
     </div>
 
@@ -745,7 +736,6 @@ let activeEditingKey = null;
 let currentPlayingSong = { title: "", content: "" };
 let activeCategoryToAssign = null;
 
-// History navigation stack to support going back to the exact previous view/context
 let viewHistory = ["home"];
 
 const notesSharp = [
@@ -910,8 +900,8 @@ function switchView(viewName, pushHistory = true) {
 
 function goBack() {
     if (viewHistory.length > 1) {
-        viewHistory.pop(); // Remove current view
-        const previousView = viewHistory[viewHistory.length - 1]; // Get previous view
+        viewHistory.pop();
+        const previousView = viewHistory[viewHistory.length - 1];
         switchView(previousView, false);
     } else {
         switchView("home", false);
