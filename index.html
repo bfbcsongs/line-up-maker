@@ -1325,10 +1325,17 @@ function loadSetListToActive(index) {
     const sl = setLists[index];
 
     if (sl && sl.lineup) {
-
+        // Load the saved lineup object into activeLineUp
         activeLineUp = { ...sl.lineup };
-        alert("Loaded Line-up for: " + sl.worshipLeader);
 
+        // Ensure the active lineup canvas renders the songs immediately
+        renderActiveLineUpCanvas();
+
+        // Switch to the home/active lineup view explicitly so you see it right away
+        switchView("home");
+
+        // Small toast or notification instead of blocking alert() if preferred, or keep a clean alert
+        console.log("Loaded Line-up for: " + sl.worshipLeader);
     }
 
 }
