@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -103,8 +102,7 @@ header {
     max-width: 65%;
 }
 
-.toolbar-tools::-webkit-scrollbar,
-.play-footer-bar::-webkit-scrollbar {
+.toolbar-tools::-webkit-scrollbar {
     display: none;
 }
 
@@ -324,35 +322,73 @@ header {
     resize: none;
     outline: none;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
-.play-footer-bar {
-    background: #131b2e;
-    border-top: 1px solid var(--panel-border);
-    padding: 8px 12px;
+/* Play View Layout with Right-Side Jumper Panel */
+.play-workspace {
     display: flex;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.output-box {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    scroll-behavior: smooth;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.play-right-bar {
+    width: 90px;
+    background: #131b2e;
+    border-left: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
     gap: 6px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    padding: 8px 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
     flex-shrink: 0;
     z-index: 99;
-    box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
-    min-height: 48px;
-    align-items: center;
+    -webkit-overflow-scrolling: touch;
+}
+
+.play-right-bar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.play-right-bar::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
 }
 
 .jumper-chip {
     background: #1e293b;
     color: var(--section);
     border: 1px solid #334155;
-    padding: 6px 12px;
-    border-radius: 16px;
-    font-size: 0.75rem;
+    padding: 8px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: bold;
-    white-space: nowrap;
+    text-align: center;
+    width: 100%;
     cursor: pointer;
     text-transform: uppercase;
     flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .jumper-chip:active,
@@ -360,19 +396,6 @@ header {
     background: var(--highlight);
     color: #000;
     border-color: var(--highlight);
-}
-
-.output-box {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    overflow-x: auto;
-    font-family: monospace;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    white-space: pre;
-    scroll-behavior: smooth;
-    min-height: 0;
 }
 
 .chord {
@@ -401,7 +424,8 @@ header {
 
 .song-part-content {
     display: block;
-    white-space: pre;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .song-part-block.active-block {
@@ -433,6 +457,10 @@ header {
     .tool-btn {
         font-size: 0.65rem;
         padding: 4px 6px;
+    }
+
+    .play-right-bar {
+        width: 80px;
     }
 }
 </style>
@@ -535,9 +563,10 @@ Chorus lyrics here..."></textarea>
 
             </div>
 
-            <div id="play-lyrics-box" class="output-box"></div>
-
-            <div id="floating-jumper-bar" class="play-footer-bar"></div>
+            <div class="play-workspace">
+                <div id="play-lyrics-box" class="output-box"></div>
+                <div id="floating-jumper-bar" class="play-right-bar"></div>
+            </div>
 
         </div>
     </div>
@@ -756,8 +785,6 @@ function initializeFirebase() {
 
             songTitles = snapshot.val() || {};
 
-            const currentData = songsDatabase;
-
             window.fbGet(
                 window.fbRef(window.fbDB, "worship_songs")
             ).then(songSnapshot => {
@@ -940,7 +967,6 @@ function isSongPartHeading(line) {
 
     if (!text) return null;
 
-    // Remove brackets and optional colon
     text = text.replace(/^\[(.*?)\]$/, "$1").trim();
     text = text.replace(/:$/, "").trim();
 
@@ -996,8 +1022,6 @@ function formatChordLine(line) {
 
     const tokens = line.trim().split(/\s+/).filter(Boolean);
 
-    // Format a line only when it consists of chord symbols
-    // This avoids coloring ordinary lyric words as chords.
     const isChordLine =
         tokens.length > 0 &&
         tokens.every(token => {
@@ -1017,7 +1041,6 @@ function formatChordLine(line) {
 
     }
 
-    // Also support inline chord notation such as [C]Amazing grace
     return escapeHTML(line).replace(
         /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g,
         (match, chord) => {
@@ -1034,7 +1057,7 @@ function formatChordLine(line) {
 
 /* ==========================================
    RENDER PLAY SCREEN
-   AUTOMATIC JUMPER GENERATION
+   EXCLUSIVELY CREATES CHIPS FOR DETECTED SECTIONS
 ========================================== */
 
 function renderPlayScreen() {
@@ -1108,15 +1131,11 @@ function renderPlayScreen() {
 
         } else {
 
-            // If the song has no heading before its lyrics,
-            // automatically create an INTRO section.
-            if (!insideBlock) {
-
-                createBlock("INTRO");
-
+            // Only output content lines under a detected block header.
+            // If lyrics start before any heading, skip or handle gracefully without forcing phantom sections.
+            if (insideBlock) {
+                htmlOutput += formatChordLine(line) + "\n";
             }
-
-            htmlOutput += formatChordLine(line) + "\n";
 
         }
 
@@ -1128,14 +1147,12 @@ function renderPlayScreen() {
 
     if (!hasContent) {
 
-        box.innerHTML = '<div class="empty-message">No song content available.</div>';
+        box.innerHTML = '<div class="empty-message">No song sections found. Please add section headers like [Verse 1] or [Chorus].</div>';
 
     }
 
-    // Reset scroll position whenever a new song is opened.
     box.scrollTop = 0;
 
-    // Reset jumper selection.
     jumper.querySelectorAll(".jumper-chip").forEach(chip => {
         chip.classList.remove("selected");
     });
@@ -1531,19 +1548,16 @@ async function saveSongFromEditor() {
 
     try {
 
-        // Save song content.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_songs/" + newKey),
             content
         );
 
-        // Save original display title separately.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_song_titles/" + newKey),
             title
         );
 
-        // Remove old song if renamed.
         if (activeEditingKey && activeEditingKey !== title) {
 
             const oldKey = getSongKey(activeEditingKey);
