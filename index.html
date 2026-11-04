@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Worship Line Up Maker Pro</title>
+    <title>Line-up Maker</title>
     
     <!-- Firebase SDK v10 -->
     <script type="module">
@@ -63,6 +63,7 @@
             overflow: hidden;
         }
 
+        /* App Header & Minimalist Icon Toolbars */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
@@ -74,50 +75,47 @@
             z-index: 100;
         }
 
-        .brand-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
+        .brand-title { font-size: 0.95rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
 
-        .trans-bar {
+        .toolbar-icons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: #1e293b;
+            color: var(--text-main);
+            border: 1px solid #334155;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .icon-btn:hover { background: #334155; border-color: var(--accent); }
+
+        .trans-badge {
             display: flex;
             align-items: center;
             background: #0f172a;
             border: 1px solid var(--panel-border);
             border-radius: 6px;
             overflow: hidden;
+            font-size: 0.75rem;
         }
-        .trans-bar span { padding: 4px 8px; font-size: 0.75rem; font-family: monospace; color: var(--text-muted); }
-        .trans-bar button {
-            background: #273548;
-            color: #fff;
-            border: none;
-            padding: 4px 10px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .btn {
-            background: #273548;
-            color: #fff;
-            border: 1px solid #334155;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            cursor: pointer;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-        }
-        .btn-primary { background: var(--accent); border: none; }
-        .btn-success { background: var(--success); border: none; color: #fff; font-weight: bold; }
-        .btn-danger { background: var(--danger); border: none; }
-        .btn-sm { padding: 4px 8px; font-size: 0.72rem; }
+        .trans-badge span { padding: 2px 6px; color: var(--text-muted); font-family: monospace; }
+        .trans-badge button { background: #273548; color: #fff; border: none; padding: 2px 6px; cursor: pointer; font-weight: bold; }
 
         .workspace {
             flex: 1;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .view-section {
@@ -129,61 +127,35 @@
         }
         .view-section.active { display: flex; }
 
-        .home-scroll {
+        /* Working Canvas (Plain empty screen style with subtle grid/border) */
+        .canvas-container {
             flex: 1;
-            overflow-y: auto;
-            padding: 12px;
+            margin: 10px;
+            background: var(--panel-bg);
+            border: 1px dashed var(--panel-border);
+            border-radius: 12px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 90px;
         }
 
-        /* Collapsible Accordion Box */
-        .section-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: var(--panel-bg);
-            cursor: pointer;
+        .canvas-title {
             font-size: 0.85rem;
             font-weight: bold;
             color: var(--section);
-            user-select: none;
-        }
-        .section-header:hover { background: #182238; }
-
-        .section-content {
-            display: none;
-            padding: 12px;
-            border-top: 1px solid var(--panel-border);
-            background: #0f172a;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .section-content.open { display: flex; }
-
-        .setlist-row {
-            background: var(--card-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 6px;
-            padding: 8px 10px;
+            text-transform: uppercase;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 6px;
         }
 
         .category-row {
-            background: #131b2e;
+            background: #0f172a;
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 10px 12px;
@@ -194,7 +166,56 @@
         .cat-label { font-weight: bold; font-size: 0.8rem; color: var(--text-muted); }
         .cat-song-title { font-size: 0.88rem; font-weight: 600; color: #fff; cursor: pointer; flex: 1; margin: 0 10px; }
 
-        /* Full Screen Edit View */
+        /* Slide-down / Popup Menus or Drawers */
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 8, 15, 0.7);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: flex-end;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .drawer-panel {
+            background: var(--panel-bg);
+            border-top: 1px solid var(--panel-border);
+            border-radius: 16px 16px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .btn {
+            background: #273548;
+            color: #fff;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: center;
+        }
+        .btn-primary { background: var(--accent); border: none; }
+        .btn-success { background: var(--success); border: none; color: #fff; font-weight: bold; }
+        .btn-danger { background: var(--danger); border: none; }
+        .btn-sm { padding: 4px 8px; font-size: 0.72rem; }
+
+        /* Full Screen Editor & Play Mode */
         .full-screen-container {
             display: flex;
             flex-direction: column;
@@ -265,7 +286,6 @@
         }
 
         .chord { color: var(--chord); font-weight: bold; }
-
         .song-part-block {
             display: block;
             margin-top: 14px;
@@ -279,107 +299,38 @@
             border-left: 4px solid var(--highlight);
         }
         .song-part-block.active-block .song-part-title { color: var(--highlight) !important; }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 8, 15, 0.85);
-            backdrop-filter: blur(4px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 16px;
-        }
-        .modal-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            padding: 18px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .modal-card input {
-            width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; outline: none;
-        }
     </style>
 </head>
 <body>
 
+    <!-- App Header with Minimalist Icons -->
     <header>
-        <span class="brand-title">Worship Line Up</span>
-        <div class="trans-bar">
-            <span>Key: <strong id="trans-val" style="color:#fff;">0</strong></span>
-            <button onclick="transposeGlobal(-1)">-</button>
-            <button onclick="transposeGlobal(1)">+</button>
+        <span class="brand-title">Line-up Maker</span>
+        <div class="toolbar-icons">
+            <div class="trans-badge">
+                <span>Key:<strong id="trans-val" style="color:#fff;">0</strong></span>
+                <button onclick="transposeGlobal(-1)">-</button>
+                <button onclick="transposeGlobal(1)">+</button>
+            </div>
+            <!-- Minimalist Icons -->
+            <button class="icon-btn" onclick="openDrawer('drawer-setlist')" title="Set Lists">📋</button>
+            <button class="icon-btn" onclick="openDrawer('drawer-activelineup')" title="Active Line-up">⚡</button>
+            <button class="icon-btn" onclick="openDrawer('drawer-songs')" title="Song Database">🎵</button>
+            <button class="icon-btn" onclick="openAddSongModal()" title="Add Song">➕</button>
+            <button class="icon-btn" onclick="openDrawer('drawer-newlineup')" title="New Line-up">📝</button>
+            <button class="icon-btn" onclick="openQRModal()" title="Wi-Fi QR">🌐</button>
         </div>
-        <button class="btn btn-sm btn-primary" onclick="openQRModal()">🌐 Wi-Fi QR</button>
     </header>
 
     <div class="workspace">
-        <!-- HOME SCREEN -->
+        <!-- HOME SCREEN WITH PLAIN EMPTY WORKING CANVAS IN THE CENTER -->
         <div id="view-home" class="view-section active">
-            <div class="home-scroll">
-                
-                <!-- b. Set List (Accordion) -->
-                <div class="section-box">
-                    <div class="section-header" onclick="toggleAccordion('acc-setlist')">
-                        <span>📋 Set List (Saved Line-ups)</span>
-                        <span>▼</span>
-                    </div>
-                    <div id="acc-setlist" class="section-content">
-                        <div id="setlist-container" style="display:flex; flex-direction:column; gap:6px;"></div>
-                    </div>
+            <div class="canvas-container">
+                <div class="canvas-title">
+                    <span>Working Canvas (Active Line-up View)</span>
+                    <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
                 </div>
-
-                <!-- c. Active Line-up (Accordion) -->
-                <div class="section-box">
-                    <div class="section-header" onclick="toggleAccordion('acc-activelineup')">
-                        <span>⚡ Active Line-up</span>
-                        <span>▼</span>
-                    </div>
-                    <div id="acc-activelineup" class="section-content">
-                        <div style="display:flex; justify-content:flex-end; margin-bottom:4px;">
-                            <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
-                        </div>
-                        <div id="active-lineup-categories" style="display:flex; flex-direction:column; gap:8px;"></div>
-                    </div>
-                </div>
-
-                <!-- d & e. Song Database & Add Song (Accordion) -->
-                <div class="section-box">
-                    <div class="section-header" onclick="toggleAccordion('acc-songsdb')">
-                        <span>🎵 Song Database & Add Song</span>
-                        <span>▼</span>
-                    </div>
-                    <div id="acc-songsdb" class="section-content">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <input type="text" id="song-search-input" placeholder="Search song title..." oninput="renderSongsDatabase()" style="width:75%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px;">
-                            <button class="btn btn-sm btn-primary" onclick="openAddSongModal()">+ Add Song</button>
-                        </div>
-                        <div id="songs-db-container" style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; margin-top:6px;"></div>
-                    </div>
-                </div>
-
-                <!-- f. Create New Line-up (Accordion) -->
-                <div class="section-box">
-                    <div class="section-header" onclick="toggleAccordion('acc-newlineup')">
-                        <span>➕ Create New Line-up</span>
-                        <span>▼</span>
-                    </div>
-                    <div id="acc-newlineup" class="section-content">
-                        <input type="text" id="new-wl-name" placeholder="Worship Leader's Name..." style="width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px;">
-                        <div id="new-lineup-selectors" style="display:flex; flex-direction:column; gap:6px;"></div>
-                        <div style="display:flex; gap:6px; margin-top:4px;">
-                            <button class="btn btn-sm btn-primary" onclick="openAddCategoryModal()">+ Add Category</button>
-                            <button class="btn btn-sm btn-success" style="flex:1;" onclick="saveNewLineUpFromForm()">Save to Set List</button>
-                        </div>
-                    </div>
-                </div>
-
+                <div id="canvas-active-categories" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
         </div>
 
@@ -412,40 +363,83 @@
         </div>
     </div>
 
-    <!-- MODAL SELECT SONG -->
-    <div id="select-song-modal" class="modal-overlay" onclick="closeModal('select-song-modal')">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h3>Select Song for <span id="select-modal-cat" style="color:var(--section);"></span></h3>
+    <!-- SLIDE-OUT DRAWERS FOR TOOLS -->
+    
+    <!-- 1. Set List Drawer -->
+    <div id="drawer-setlist" class="drawer-overlay" onclick="closeDrawer('drawer-setlist')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="color:var(--success); font-size:0.95rem;">Saved Set Lists</h3>
+            <div id="setlist-container" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+            <button class="btn" onclick="closeDrawer('drawer-setlist')">Close</button>
+        </div>
+    </div>
+
+    <!-- 2. Active Line-up Drawer -->
+    <div id="drawer-activelineup" class="drawer-overlay" onclick="closeDrawer('drawer-activelineup')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="color:var(--section); font-size:0.95rem;">Active Line-up Management</h3>
+            <div id="drawer-active-categories" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+            <button class="btn" onclick="closeDrawer('drawer-activelineup')">Close</button>
+        </div>
+    </div>
+
+    <!-- 3. Songs Database Drawer -->
+    <div id="drawer-songs" class="drawer-overlay" onclick="closeDrawer('drawer-songs')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="color:var(--accent); font-size:0.95rem;">Song Database</h3>
+            <input type="text" id="song-search-input" placeholder="Search song..." oninput="renderSongsDatabase()" style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
+            <div id="songs-db-container" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+            <button class="btn" onclick="closeDrawer('drawer-songs')">Close</button>
+        </div>
+    </div>
+
+    <!-- 4. New Line-up Drawer -->
+    <div id="drawer-newlineup" class="drawer-overlay" onclick="closeDrawer('drawer-newlineup')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="color:var(--highlight); font-size:0.95rem;">Create New Line-up</h3>
+            <input type="text" id="new-wl-name" placeholder="Worship Leader Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
+            <div id="new-lineup-selectors" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+            <div style="display:flex; gap:6px;">
+                <button class="btn btn-sm" onclick="openAddCategoryModal()">+ Category</button>
+                <button class="btn btn-success" style="flex:1;" onclick="saveNewLineUpFromForm()">Save to Set List</button>
+            </div>
+            <button class="btn" onclick="closeDrawer('drawer-newlineup')">Close</button>
+        </div>
+    </div>
+
+    <!-- MODALS FOR SELECTION & QR -->
+    <div id="select-song-modal" class="drawer-overlay" onclick="closeModal('select-song-modal')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="font-size:0.95rem;">Select Song for <span id="select-modal-cat" style="color:var(--section);"></span></h3>
             <div id="modal-songs-list" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
             <button class="btn" onclick="closeModal('select-song-modal')">Cancel</button>
         </div>
     </div>
 
-    <!-- SAVE ACTIVE LINE-UP MODAL -->
-    <div id="save-lineup-modal" class="modal-overlay" onclick="closeModal('save-lineup-modal')">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h3 style="color:var(--success);">Save Active Line-up</h3>
-            <input type="text" id="save-wl-input" placeholder="Worship Leader Name...">
-            <button class="btn btn-success" onclick="confirmSaveActiveLineUp()">Save to Set List</button>
+    <div id="save-lineup-modal" class="drawer-overlay" onclick="closeModal('save-lineup-modal')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="color:var(--success); font-size:0.95rem;">Save Active Line-up</h3>
+            <input type="text" id="save-wl-input" placeholder="Worship Leader Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
+            <button class="btn btn-success" onclick="confirmSaveActiveLineUp()">Save</button>
+            <button class="btn" onclick="closeModal('save-lineup-modal')">Cancel</button>
         </div>
     </div>
 
-    <!-- h. QR Code & Wi-Fi Link Generator Modal -->
-    <div id="qr-modal" class="modal-overlay" onclick="closeModal('qr-modal')">
-        <div class="modal-card" onclick="event.stopPropagation()" style="align-items:center; text-align:center;">
-            <h3>🌐 Local Wi-Fi Connection</h3>
+    <div id="qr-modal" class="drawer-overlay" onclick="closeModal('qr-modal')">
+        <div class="drawer-panel" onclick="event.stopPropagation()" style="align-items:center; text-align:center;">
+            <h3 style="font-size:0.95rem;">Local Wi-Fi QR Code</h3>
             <div id="qrcode" style="background:#fff; padding:10px; border-radius:8px;"></div>
             <p style="font-size:0.75rem; color:var(--text-muted); word-break:break-all;" id="wifi-link-text"></p>
             <button class="btn" onclick="closeModal('qr-modal')">Close</button>
         </div>
     </div>
 
-    <!-- ADD CATEGORY MODAL -->
-    <div id="add-cat-modal" class="modal-overlay" onclick="closeModal('add-cat-modal')">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h3>Add Custom Category</h3>
-            <input type="text" id="new-cat-input" placeholder="Category Name (e.g. Special Number)...">
-            <button class="btn btn-primary" onclick="confirmAddCategory()">Add Category</button>
+    <div id="add-cat-modal" class="drawer-overlay" onclick="closeModal('add-cat-modal')">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <h3 style="font-size:0.95rem;">Add Custom Category</h3>
+            <input type="text" id="new-cat-input" placeholder="Category Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
+            <button class="btn btn-primary" onclick="confirmAddCategory()">Add</button>
+            <button class="btn" onclick="closeModal('add-cat-modal')">Cancel</button>
         </div>
     </div>
 
@@ -466,7 +460,7 @@
             window.fbOnValue(window.fbRef(window.fbDB, 'worship_songs'), (snapshot) => {
                 songsDatabase = snapshot.exists() ? snapshot.val() : {};
                 renderSongsDatabase();
-                renderActiveLineUpCategories();
+                renderActiveLineUpCanvas();
                 renderNewLineUpForm();
             });
 
@@ -478,7 +472,7 @@
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            renderActiveLineUpCategories();
+            renderActiveLineUpCanvas();
             renderNewLineUpForm();
         });
 
@@ -487,10 +481,15 @@
             document.getElementById(`view-${viewName}`).classList.add('active');
         }
 
-        /* Accordion Toggle Handler */
-        function toggleAccordion(id) {
-            let el = document.getElementById(id);
-            el.classList.toggle('open');
+        /* Slide-out Drawers Control */
+        function openDrawer(drawerId) {
+            document.getElementById(drawerId).style.display = 'flex';
+        }
+        function closeDrawer(drawerId) {
+            document.getElementById(drawerId).style.display = 'none';
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         function transposeGlobal(amount) {
@@ -505,15 +504,15 @@
             const container = document.getElementById('setlist-container');
             container.innerHTML = "";
             if (setLists.length === 0) {
-                container.innerHTML = `<span style="font-size:0.78rem; color:var(--text-muted); font-style:italic;">No saved set lists found.</span>`;
+                container.innerHTML = `<span style="font-size:0.78rem; color:var(--text-muted); font-style:italic;">No saved set lists.</span>`;
                 return;
             }
             setLists.forEach((sl, index) => {
                 let row = document.createElement('div');
-                row.className = 'setlist-row';
+                row.className = 'category-row';
                 row.innerHTML = `
                     <span style="font-size:0.85rem; font-weight:bold; color:var(--success);">${index + 1}. ${sl.worshipLeader}</span>
-                    <button class="btn btn-sm btn-primary" onclick="loadSetListToActive(${index})">Load</button>
+                    <button class="btn btn-sm btn-primary" onclick="loadSetListToActive(${index}); closeDrawer('drawer-setlist');">Load</button>
                 `;
                 container.appendChild(row);
             });
@@ -523,27 +522,38 @@
             let sl = setLists[index];
             if (sl && sl.lineup) {
                 activeLineUp = { ...sl.lineup };
-                renderActiveLineUpCategories();
-                alert(`Loaded Line-up of Worship Leader: ${sl.worshipLeader}`);
+                renderActiveLineUpCanvas();
+                alert(`Loaded Line-up: ${sl.worshipLeader}`);
             }
         }
 
-        function renderActiveLineUpCategories() {
-            const container = document.getElementById('active-lineup-categories');
+        /* Render Active Line-up on Working Canvas & Drawer */
+        function renderActiveLineUpCanvas() {
+            const container = document.getElementById('canvas-active-categories');
+            const drawerContainer = document.getElementById('drawer-active-categories');
             container.innerHTML = "";
+            drawerContainer.innerHTML = "";
+
             categories.forEach(cat => {
                 let songTitle = activeLineUp[cat];
-                let row = document.createElement('div');
-                row.className = 'category-row';
-                row.innerHTML = `
+                let rowHtml = `
                     <span class="cat-label">♦️ ${cat}:</span>
-                    <span class="cat-song-title" onclick="${songTitle ? `playSong('${songTitle}')` : `openSelectSongModal('${cat}')`}">${songTitle ? '🎵 ' + songTitle : '<span style="color:var(--text-muted); font-style:italic;">Tap to add song</span>'}</span>
+                    <span class="cat-song-title" onclick="${songTitle ? `playSong('${songTitle}')` : `openSelectSongModal('${cat}')`}">${songTitle ? '🎵 ' + songTitle : '<span style="color:var(--text-muted); font-style:italic;">Tap to assign song</span>'}</span>
                     <div style="display:flex; gap:4px;">
                         ${songTitle ? `<button class="btn btn-sm" onclick="openEditSongDirect('${songTitle}')">Edit</button>` : ''}
                         <button class="btn btn-sm btn-primary" onclick="openSelectSongModal('${cat}')">${songTitle ? 'Change' : '+Select'}</button>
                     </div>
                 `;
-                container.appendChild(row);
+
+                let div1 = document.createElement('div');
+                div1.className = 'category-row';
+                div1.innerHTML = rowHtml;
+                container.appendChild(div1);
+
+                let div2 = document.createElement('div');
+                div2.className = 'category-row';
+                div2.innerHTML = rowHtml;
+                drawerContainer.appendChild(div2);
             });
         }
 
@@ -554,12 +564,12 @@
             list.innerHTML = "";
             for (let title in songsDatabase) {
                 let div = document.createElement('div');
-                div.style.cssText = "background:#0f172a; padding:8px; border-radius:6px; cursor:pointer; font-size:0.85rem;";
+                div.style.cssText = "background:#0f172a; padding:8px; border-radius:6px; cursor:pointer; font-size:0.85rem; color:#fff;";
                 div.innerText = "🎵 " + title;
                 div.onclick = () => {
                     activeLineUp[cat] = title;
                     closeModal('select-song-modal');
-                    renderActiveLineUpCategories();
+                    renderActiveLineUpCanvas();
                 };
                 list.appendChild(div);
             }
@@ -575,7 +585,7 @@
                     let div = document.createElement('div');
                     div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:6px 10px; border-radius:6px;";
                     div.innerHTML = `
-                        <span style="font-size:0.85rem; cursor:pointer;" onclick="playSong('${title}')">🎵 ${title}</span>
+                        <span style="font-size:0.85rem; cursor:pointer; color:#fff;" onclick="playSong('${title}'); closeDrawer('drawer-songs');">🎵 ${title}</span>
                         <button class="btn btn-sm" onclick="openEditSongDirect('${title}')">Edit</button>
                     `;
                     container.appendChild(div);
@@ -640,7 +650,6 @@
             });
         }
 
-        /* Punitive fix #1: New Line-up saves independently without altering active line-up */
         async function saveNewLineUpFromForm() {
             let wlName = document.getElementById('new-wl-name').value.trim();
             if (!wlName) return alert("Please input Worship Leader Name.");
@@ -654,6 +663,7 @@
             setLists.unshift({ worshipLeader: wlName, lineup: tempLineup });
             await window.fbSet(window.fbRef(window.fbDB, 'worship_setlists'), setLists);
             document.getElementById('new-wl-name').value = "";
+            closeDrawer('drawer-newlineup');
             alert("New Line-up saved to Set List!");
         }
 
@@ -752,13 +762,11 @@
             let name = document.getElementById('new-cat-input').value.trim();
             if (name && !categories.includes(name)) {
                 categories.push(name);
-                renderActiveLineUpCategories();
+                renderActiveLineUpCanvas();
                 renderNewLineUpForm();
                 closeModal('add-cat-modal');
             }
         }
-
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     </script>
 </body>
 </html>
