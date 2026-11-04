@@ -209,13 +209,12 @@
         .btn-danger { background: var(--danger); border: none; }
         .btn-sm { padding: 4px 8px; font-size: 0.72rem; }
 
-        /* Full Screen Editor & Play Mode */
+        /* Full Screen Editor & Play Mode Layout */
         .full-screen-container {
             display: flex;
             flex-direction: column;
             height: 100%;
             background: var(--bg-color);
-            position: relative;
         }
         .edit-topbar {
             display: flex;
@@ -224,6 +223,7 @@
             padding: 8px 12px;
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
+            flex-shrink: 0;
             z-index: 50;
         }
         .editor-textarea {
@@ -240,31 +240,26 @@
             outline: none;
         }
 
-        /* INANGAT NA FLOATING JUMPER BAR (Para hindi kainin ng Android Bar) */
-        .floating-jumper-bar {
-            position: absolute;
-            bottom: calc(35px + env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
+        /* SIGURADONG NAKALUTANG NA STABLE CONTAINER SA IBABA (FLEX FOOTER BAR) */
+        .play-footer-bar {
             background: #131b2e;
-            border: 2px solid var(--section);
-            padding: 6px 12px;
-            border-radius: 30px;
+            border-top: 1px solid var(--panel-border);
+            padding: 8px 12px;
             display: flex;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
-            max-width: 90%;
-            z-index: 999;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.9);
+            flex-shrink: 0;
+            z-index: 99;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
         }
-        .floating-jumper-bar::-webkit-scrollbar { display: none; }
+        .play-footer-bar::-webkit-scrollbar { display: none; }
         
         .jumper-chip {
             background: #1e293b;
             color: var(--section);
             border: 1px solid #334155;
             padding: 6px 12px;
-            border-radius: 18px;
+            border-radius: 16px;
             font-size: 0.75rem;
             font-weight: bold;
             white-space: nowrap;
@@ -276,7 +271,6 @@
         .output-box {
             flex: 1;
             padding: 16px;
-            padding-bottom: 120px; /* Nilakihan para hindi matakpan ang huling lyrics */
             overflow-y: auto;
             font-family: monospace;
             font-size: 0.95rem;
@@ -360,7 +354,7 @@
             </div>
         </div>
 
-        <!-- PLAY VIEW WITH FLOATING JUMPER & YELLOW HIGHLIGHT -->
+        <!-- PLAY VIEW WITH STABLE BOTTOM FOOTER BAR -->
         <div id="view-play" class="view-section">
             <div class="full-screen-container">
                 <div class="edit-topbar">
@@ -371,7 +365,8 @@
                 
                 <div id="play-lyrics-box" class="output-box"></div>
                 
-                <div id="floating-jumper-bar" class="floating-jumper-bar"></div>
+                <!-- STABLE BOTTOM FOOTER BAR -->
+                <div id="floating-jumper-bar" class="play-footer-bar"></div>
             </div>
         </div>
     </div>
@@ -683,7 +678,7 @@
             return notesSharp[newIdx] + suffix;
         }
 
-        /* DYNAMIC SONG PART DETECTOR & FLOATING CHIP GENERATOR */
+        /* SONG PART DETECTOR & FOOTER CHIPS */
         function renderPlayScreen() {
             const box = document.getElementById('play-lyrics-box');
             const jumper = document.getElementById('floating-jumper-bar');
@@ -712,7 +707,6 @@
                     
                     htmlOutput += `<div id="${id}" class="song-part-block">\n<span class="song-part-title" onclick="jumpToBlock('${id}')">[${label}]</span>\n`;
 
-                    // Gagawa ng Chip Button para sa Jumper Bar
                     let chip = document.createElement('button');
                     chip.className = 'jumper-chip';
                     chip.innerText = label;
