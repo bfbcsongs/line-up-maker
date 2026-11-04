@@ -62,7 +62,7 @@
             overflow: hidden;
         }
 
-        /* Header Bar */
+        /* Top Bar */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
@@ -240,22 +240,22 @@
             outline: none;
         }
 
-        /* FIXED FLOATING JUMPER BAR SA IBABA */
+        /* INANGAT NA FLOATING JUMPER BAR (Para hindi kainin ng Android Bar) */
         .floating-jumper-bar {
             position: absolute;
-            bottom: 15px;
+            bottom: calc(35px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
             background: #131b2e;
             border: 2px solid var(--section);
-            padding: 8px 14px;
+            padding: 6px 12px;
             border-radius: 30px;
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            max-width: 92%;
-            z-index: 99;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            max-width: 90%;
+            z-index: 999;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.9);
         }
         .floating-jumper-bar::-webkit-scrollbar { display: none; }
         
@@ -276,7 +276,7 @@
         .output-box {
             flex: 1;
             padding: 16px;
-            padding-bottom: 100px;
+            padding-bottom: 120px; /* Nilakihan para hindi matakpan ang huling lyrics */
             overflow-y: auto;
             font-family: monospace;
             font-size: 0.95rem;
@@ -371,7 +371,6 @@
                 
                 <div id="play-lyrics-box" class="output-box"></div>
                 
-                <!-- GUARANTEED FLOATING JUMPER BAR -->
                 <div id="floating-jumper-bar" class="floating-jumper-bar"></div>
             </div>
         </div>
@@ -684,18 +683,13 @@
             return notesSharp[newIdx] + suffix;
         }
 
-        /* DYNAMIC SONG PART AUTO-DETECTOR & JUMPER CHIPS */
+        /* DYNAMIC SONG PART DETECTOR & FLOATING CHIP GENERATOR */
         function renderPlayScreen() {
             const box = document.getElementById('play-lyrics-box');
             const jumper = document.getElementById('floating-jumper-bar');
             jumper.innerHTML = '';
             
             let content = currentPlayingSong.content || "";
-            
-            // Auto detect standard song sections if no brackets exist
-            if (!content.includes("[")) {
-                content = content.replace(/(intro|verse|chorus|bridge|outro)/gi, "\n[$1]\n");
-            }
 
             const lines = content.split('\n');
             let htmlOutput = '';
@@ -718,7 +712,7 @@
                     
                     htmlOutput += `<div id="${id}" class="song-part-block">\n<span class="song-part-title" onclick="jumpToBlock('${id}')">[${label}]</span>\n`;
 
-                    // Generate Floating Chip Button
+                    // Gagawa ng Chip Button para sa Jumper Bar
                     let chip = document.createElement('button');
                     chip.className = 'jumper-chip';
                     chip.innerText = label;
