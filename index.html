@@ -503,18 +503,22 @@ header {
 <div class="workspace">
 
     
+
+<!-- HOME / ACTIVE LINEUP CANVAS VIEW -->
 <div id="view-home" class="view-section active">
     <div class="active-lineup-screen">
         <div class="screen-header">
             <span>ACTIVE LINE-UP</span>
             <span id="home-worship-leader"></span>
         </div>
-        <div id="home-lineup-container"></div>
-        <button class="btn btn-primary" onclick="openDrawer('drawer-setlist')">
-            📋 Load Set List
-        </button>
-        <button class="btn btn-success" onclick="openSaveLineupModal()">
-            💾 Save Active Line-up
+
+        <div id="home-lineup-container" style="display:flex;flex-direction:column;gap:8px;">
+            <div class="empty-message">No active line-up. Select Start Jam.</div>
+        </div>
+
+        <button id="start-jam-btn" class="btn btn-primary"
+            onclick="openDrawer('drawer-setlist')">
+            Start Jam
         </button>
     </div>
 </div>
@@ -947,18 +951,21 @@ function renderSetList() {
 
 
 
+
 function loadSetListToActive(index) {
     const sl = setLists[index];
 
     if (!sl || !sl.lineup) {
-        alert("Unable to load this Set List.");
+        alert("Unable to load selected Set List.");
         return;
     }
 
     activeLineUp = { ...sl.lineup };
 
-    document.getElementById("home-worship-leader").textContent =
-        sl.worshipLeader || "Unnamed";
+    const leader = document.getElementById("home-worship-leader");
+    if (leader) {
+        leader.textContent = sl.worshipLeader || "Unnamed";
+    }
 
     renderActiveLineUp();
 
@@ -968,15 +975,19 @@ function loadSetListToActive(index) {
 
 function renderActiveLineUp() {
     const container = document.getElementById("home-lineup-container");
+    const startButton = document.getElementById("start-jam-btn");
+
     if (!container) return;
 
     container.innerHTML = "";
 
     const entries = Object.entries(activeLineUp);
 
-    if (!entries.length) {
+    if (entries.length === 0) {
         container.innerHTML =
-            '<span class="empty-message">No songs assigned.</span>';
+            '<div class="empty-message">No songs assigned.</div>';
+
+        if (startButton) startButton.style.display = "block";
         return;
     }
 
@@ -993,13 +1004,18 @@ function renderActiveLineUp() {
         title.textContent = song;
 
         title.onclick = () => {
-            if (songsDatabase[song]) playSong(song);
-            else alert("Song not found in database: " + song);
+            if (songsDatabase[song] !== undefined) {
+                playSong(song);
+            } else {
+                alert("Song not found: " + song);
+            }
         };
 
         row.append(label, title);
         container.appendChild(row);
     });
+
+    if (startButton) startButton.style.display = "none";
 }
 
 function renderSongsDatabase() {
