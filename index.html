@@ -43,7 +43,6 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #2563eb;
-            --accent-hover: #1d4ed8;
             --success: #059669;
             --danger: #dc2626;
             --chord: #4ade80;
@@ -63,7 +62,7 @@
             overflow: hidden;
         }
 
-        /* Top Bar */
+        /* Header Bar */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
@@ -100,7 +99,6 @@
             cursor: pointer;
             white-space: nowrap;
         }
-        .tool-btn:hover { background: #334155; border-color: var(--accent); }
 
         .trans-badge {
             display: flex;
@@ -131,7 +129,6 @@
         }
         .view-section.active { display: flex; }
 
-        /* Active Line-up Main Screen */
         .active-lineup-screen {
             flex: 1;
             margin: 10px;
@@ -170,7 +167,6 @@
         .cat-label { font-weight: bold; font-size: 0.8rem; color: var(--text-muted); }
         .cat-song-title { font-size: 0.88rem; font-weight: 600; color: #fff; cursor: pointer; flex: 1; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Slide-out Drawers */
         .drawer-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -244,42 +240,43 @@
             outline: none;
         }
 
-        /* Floating Jumper Chips sa Ibaba */
+        /* FIXED FLOATING JUMPER BAR SA IBABA */
         .floating-jumper-bar {
             position: absolute;
-            bottom: 12px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(19, 27, 46, 0.95);
-            border: 1px solid var(--panel-border);
-            padding: 6px 12px;
-            border-radius: 24px;
+            background: #131b2e;
+            border: 2px solid var(--section);
+            padding: 8px 14px;
+            border-radius: 30px;
             display: flex;
-            gap: 6px;
+            gap: 8px;
             overflow-x: auto;
-            max-width: 95%;
-            z-index: 60;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            max-width: 92%;
+            z-index: 99;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
         }
         .floating-jumper-bar::-webkit-scrollbar { display: none; }
+        
         .jumper-chip {
             background: #1e293b;
             color: var(--section);
             border: 1px solid #334155;
-            padding: 5px 10px;
-            border-radius: 16px;
+            padding: 6px 12px;
+            border-radius: 18px;
             font-size: 0.75rem;
             font-weight: bold;
             white-space: nowrap;
             cursor: pointer;
             text-transform: uppercase;
         }
-        .jumper-chip:hover { background: #334155; color: #fff; }
+        .jumper-chip:active { background: var(--section); color: #000; }
 
         .output-box {
             flex: 1;
             padding: 16px;
-            padding-bottom: 90px;
+            padding-bottom: 100px;
             overflow-y: auto;
             font-family: monospace;
             font-size: 0.95rem;
@@ -290,13 +287,14 @@
 
         .chord { color: var(--chord); font-weight: bold; }
 
-        /* Full Block Yellow Tint Highlight */
+        /* FULL BLOCK YELLOW HIGHLIGHT */
         .song-part-block {
             display: block;
             margin-top: 14px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: background 0.3s ease;
+            padding: 10px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
         }
         .song-part-title { 
             color: var(--section); 
@@ -305,10 +303,12 @@
             font-size: 0.9rem; 
             cursor: pointer;
             display: inline-block;
+            margin-bottom: 4px;
         }
         .song-part-block.active-block {
-            background-color: rgba(250, 204, 21, 0.18);
-            border-left: 4px solid var(--highlight);
+            background-color: rgba(250, 204, 21, 0.18) !important;
+            border-left: 5px solid var(--highlight) !important;
+            border-color: rgba(250, 204, 21, 0.3);
         }
         .song-part-block.active-block .song-part-title { 
             color: var(--highlight) !important; 
@@ -317,7 +317,6 @@
 </head>
 <body>
 
-    <!-- Top Bar -->
     <header>
         <span class="brand-title">Line-up Maker</span>
         <div class="toolbar-tools">
@@ -361,7 +360,7 @@
             </div>
         </div>
 
-        <!-- PLAY VIEW WITH AUTO-DETECT & JUMPER -->
+        <!-- PLAY VIEW WITH FLOATING JUMPER & YELLOW HIGHLIGHT -->
         <div id="view-play" class="view-section">
             <div class="full-screen-container">
                 <div class="edit-topbar">
@@ -369,8 +368,10 @@
                     <span id="play-song-title" style="font-weight:bold; color:var(--section);">Song Title</span>
                     <button class="btn btn-sm btn-primary" onclick="openEditorFromPlay()">Edit</button>
                 </div>
+                
                 <div id="play-lyrics-box" class="output-box"></div>
-                <!-- ITO ANG FLOATING JUMPER BAR NA NAWALA KANINA -->
+                
+                <!-- GUARANTEED FLOATING JUMPER BAR -->
                 <div id="floating-jumper-bar" class="floating-jumper-bar"></div>
             </div>
         </div>
@@ -584,7 +585,7 @@
         function openAddSongModal() {
             activeEditingKey = null;
             document.getElementById('edit-song-title-label').innerText = "Add New Song";
-            document.getElementById('editor-textarea').value = "[Untitled Song]\n\n[Verse 1]\n\n[Chorus]\n";
+            document.getElementById('editor-textarea').value = "[Untitled Song]\n\n[Verse 1]\nC   G\nLyrics here...\n\n[Chorus]\nF   C\nChorus lyrics here...";
             switchView('edit');
         }
 
@@ -683,13 +684,20 @@
             return notesSharp[newIdx] + suffix;
         }
 
-        /* Song Part Auto-Detect & Full Block Yellow Highlight */
+        /* DYNAMIC SONG PART AUTO-DETECTOR & JUMPER CHIPS */
         function renderPlayScreen() {
             const box = document.getElementById('play-lyrics-box');
             const jumper = document.getElementById('floating-jumper-bar');
             jumper.innerHTML = '';
             
-            const lines = (currentPlayingSong.content || "").split('\n');
+            let content = currentPlayingSong.content || "";
+            
+            // Auto detect standard song sections if no brackets exist
+            if (!content.includes("[")) {
+                content = content.replace(/(intro|verse|chorus|bridge|outro)/gi, "\n[$1]\n");
+            }
+
+            const lines = content.split('\n');
             let htmlOutput = '';
             const chordRegex = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|7|9|11|13)?(?:\/[A-G][#b]?)?)\b/g;
             const bracketRegex = /^\[(.*?)\]\s*$/;
@@ -707,8 +715,10 @@
                     if (insideBlock) htmlOutput += `</div>\n`;
                     let label = match[1];
                     let id = `block-${partCounter}`;
+                    
                     htmlOutput += `<div id="${id}" class="song-part-block">\n<span class="song-part-title" onclick="jumpToBlock('${id}')">[${label}]</span>\n`;
 
+                    // Generate Floating Chip Button
                     let chip = document.createElement('button');
                     chip.className = 'jumper-chip';
                     chip.innerText = label;
@@ -718,7 +728,10 @@
                     partCounter++;
                     insideBlock = true;
                 } else {
-                    if (!insideBlock) { htmlOutput += `<div id="block-intro" class="song-part-block">\n`; insideBlock = true; }
+                    if (!insideBlock) { 
+                        htmlOutput += `<div id="block-intro" class="song-part-block">\n`; 
+                        insideBlock = true; 
+                    }
                     let formatted = escaped.replace(chordRegex, (m) => `<span class="chord">${transposeNote(m, globalSemitones)}</span>`);
                     htmlOutput += formatted + (i < lines.length - 1 ? '\n' : '');
                 }
