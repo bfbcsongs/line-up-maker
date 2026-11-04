@@ -63,11 +63,11 @@
             overflow: hidden;
         }
 
-        /* App Header & Minimalist Icon Toolbars */
+        /* Top Bar with Icon + Label Tools */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
-            padding: 8px 12px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -75,28 +75,32 @@
             z-index: 100;
         }
 
-        .brand-title { font-size: 0.9rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+        .brand-title { font-size: 0.85rem; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
 
-        .toolbar-icons {
+        .toolbar-tools {
             display: flex;
             gap: 4px;
             align-items: center;
+            overflow-x: auto;
+            max-width: 65%;
         }
+        .toolbar-tools::-webkit-scrollbar { display: none; }
 
-        .icon-btn {
+        .tool-btn {
             background: #1e293b;
             color: var(--text-main);
             border: 1px solid #334155;
-            width: 32px;
-            height: 32px;
+            padding: 4px 8px;
             border-radius: 6px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 0.85rem;
+            gap: 3px;
+            font-size: 0.7rem;
+            font-weight: 500;
             cursor: pointer;
+            white-space: nowrap;
         }
-        .icon-btn:active { background: var(--accent); }
+        .tool-btn:hover { background: #334155; border-color: var(--accent); }
 
         .trans-badge {
             display: flex;
@@ -105,11 +109,10 @@
             border: 1px solid var(--panel-border);
             border-radius: 6px;
             overflow: hidden;
-            font-size: 0.7rem;
-            margin-right: 2px;
+            font-size: 0.68rem;
         }
-        .trans-badge span { padding: 2px 4px; color: var(--text-muted); font-family: monospace; }
-        .trans-badge button { background: #273548; color: #fff; border: none; padding: 2px 6px; cursor: pointer; font-weight: bold; }
+        .trans-badge span { padding: 2px 3px; color: var(--text-muted); font-family: monospace; }
+        .trans-badge button { background: #273548; color: #fff; border: none; padding: 2px 5px; cursor: pointer; font-weight: bold; }
 
         .workspace {
             flex: 1;
@@ -128,12 +131,12 @@
         }
         .view-section.active { display: flex; }
 
-        /* Working Canvas */
-        .canvas-container {
+        /* Active Line-up Main Screen (Center Workspace) */
+        .active-lineup-screen {
             flex: 1;
             margin: 10px;
             background: var(--panel-bg);
-            border: 1px dashed var(--panel-border);
+            border: 1px solid var(--panel-border);
             border-radius: 12px;
             padding: 12px;
             display: flex;
@@ -143,8 +146,8 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .canvas-title {
-            font-size: 0.8rem;
+        .screen-header {
+            font-size: 0.85rem;
             font-weight: bold;
             color: var(--section);
             text-transform: uppercase;
@@ -159,15 +162,15 @@
             background: #0f172a;
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .cat-label { font-weight: bold; font-size: 0.78rem; color: var(--text-muted); }
-        .cat-song-title { font-size: 0.85rem; font-weight: 600; color: #fff; cursor: pointer; flex: 1; margin: 0 8px; }
+        .cat-label { font-weight: bold; font-size: 0.8rem; color: var(--text-muted); }
+        .cat-song-title { font-size: 0.88rem; font-weight: 600; color: #fff; cursor: pointer; flex: 1; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Slide-out Drawers (Isolated classes para hindi mag-overlap) */
+        /* Slide-out Drawers */
         .drawer-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -298,31 +301,30 @@
 </head>
 <body>
 
-    <!-- App Header with Minimalist Icons -->
+    <!-- Top Bar: App Name + Transpose + Labeled Icon Tools -->
     <header>
         <span class="brand-title">Line-up Maker</span>
-        <div class="toolbar-icons">
+        <div class="toolbar-tools">
             <div class="trans-badge">
                 <span>K:<strong id="trans-val" style="color:#fff;">0</strong></span>
                 <button onclick="transposeGlobal(-1)">-</button>
                 <button onclick="transposeGlobal(1)">+</button>
             </div>
-            <button class="icon-btn" onclick="openDrawer('drawer-setlist')" title="Set Lists">📋</button>
-            <button class="icon-btn" onclick="openDrawer('drawer-activelineup')" title="Line-up">⚡</button>
-            <button class="icon-btn" onclick="openDrawer('drawer-songs')" title="Songs">🎵</button>
-            <button class="icon-btn" onclick="openAddSongModal()" title="+Add Song">➕</button>
-            <button class="icon-btn" onclick="openDrawer('drawer-newlineup')" title="New Line-up">📝</button>
-            <button class="icon-btn" onclick="openQRModal()" title="Wi-Fi QR">🌐</button>
+            <button class="tool-btn" onclick="openDrawer('drawer-setlist')">📋 Set List</button>
+            <button class="tool-btn" onclick="openDrawer('drawer-songs')">🎵 Songs</button>
+            <button class="tool-btn" onclick="openAddSongModal()">➕ Add Song</button>
+            <button class="tool-btn" onclick="openDrawer('drawer-newlineup')">📝 New</button>
+            <button class="tool-btn" onclick="openQRModal()">🌐 Wi-Fi</button>
         </div>
     </header>
 
     <div class="workspace">
-        <!-- HOME SCREEN -->
+        <!-- HOME SCREEN: Active Line-up directly on center screen -->
         <div id="view-home" class="view-section active">
-            <div class="canvas-container">
-                <div class="canvas-title">
-                    <span>Working Canvas</span>
-                    <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save</button>
+            <div class="active-lineup-screen">
+                <div class="screen-header">
+                    <span>Active Line-up</span>
+                    <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
                 </div>
                 <div id="canvas-active-categories" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
@@ -362,35 +364,26 @@
     <!-- 1. Set List Drawer -->
     <div id="drawer-setlist" class="drawer-overlay" onclick="closeDrawer('drawer-setlist')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="color:var(--success); font-size:0.9rem;">Set List</h3>
+            <h3 style="color:var(--success); font-size:0.95rem;">Set List (Saved Line-ups)</h3>
             <div id="setlist-container" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
             <button class="btn" onclick="closeDrawer('drawer-setlist')">Close</button>
         </div>
     </div>
 
-    <!-- 2. Active Line-up Drawer -->
-    <div id="drawer-activelineup" class="drawer-overlay" onclick="closeDrawer('drawer-activelineup')">
-        <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="color:var(--section); font-size:0.9rem;">Line-up Management</h3>
-            <div id="drawer-active-categories" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
-            <button class="btn" onclick="closeDrawer('drawer-activelineup')">Close</button>
-        </div>
-    </div>
-
-    <!-- 3. Songs Database Drawer -->
+    <!-- 2. Songs Database Drawer -->
     <div id="drawer-songs" class="drawer-overlay" onclick="closeDrawer('drawer-songs')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="color:var(--accent); font-size:0.9rem;">Song Database</h3>
+            <h3 style="color:var(--accent); font-size:0.95rem;">Song Database</h3>
             <input type="text" id="song-search-input" placeholder="Search song..." oninput="renderSongsDatabase()" style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
             <div id="songs-db-container" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
             <button class="btn" onclick="closeDrawer('drawer-songs')">Close</button>
         </div>
     </div>
 
-    <!-- 4. New Line-up Drawer -->
+    <!-- 3. New Line-up Drawer -->
     <div id="drawer-newlineup" class="drawer-overlay" onclick="closeDrawer('drawer-newlineup')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="color:var(--highlight); font-size:0.9rem;">New Line-up</h3>
+            <h3 style="color:var(--highlight); font-size:0.95rem;">Create New Line-up</h3>
             <input type="text" id="new-wl-name" placeholder="Worship Leader Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
             <div id="new-lineup-selectors" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
             <div style="display:flex; gap:6px;">
@@ -404,7 +397,7 @@
     <!-- MODALS -->
     <div id="select-song-modal" class="drawer-overlay" onclick="closeModal('select-song-modal')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="font-size:0.9rem;">Select Song for <span id="select-modal-cat" style="color:var(--section);"></span></h3>
+            <h3 style="font-size:0.95rem;">Select Song for <span id="select-modal-cat" style="color:var(--section);"></span></h3>
             <div id="modal-songs-list" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
             <button class="btn" onclick="closeModal('select-song-modal')">Cancel</button>
         </div>
@@ -412,7 +405,7 @@
 
     <div id="save-lineup-modal" class="drawer-overlay" onclick="closeModal('save-lineup-modal')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="color:var(--success); font-size:0.9rem;">Save Active Line-up</h3>
+            <h3 style="color:var(--success); font-size:0.95rem;">Save Active Line-up</h3>
             <input type="text" id="save-wl-input" placeholder="Worship Leader Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
             <button class="btn btn-success" onclick="confirmSaveActiveLineUp()">Save</button>
             <button class="btn" onclick="closeModal('save-lineup-modal')">Cancel</button>
@@ -421,16 +414,16 @@
 
     <div id="qr-modal" class="drawer-overlay" onclick="closeModal('qr-modal')">
         <div class="drawer-panel" onclick="event.stopPropagation()" style="align-items:center; text-align:center;">
-            <h3 style="font-size:0.9rem;">Local Wi-Fi QR Code</h3>
+            <h3 style="font-size:0.95rem;">Local Wi-Fi QR Code</h3>
             <div id="qrcode" style="background:#fff; padding:10px; border-radius:8px;"></div>
-            <p style="font-size:0.7rem; color:var(--text-muted); word-break:break-all;" id="wifi-link-text"></p>
+            <p style="font-size:0.75rem; color:var(--text-muted); word-break:break-all;" id="wifi-link-text"></p>
             <button class="btn" onclick="closeModal('qr-modal')">Close</button>
         </div>
     </div>
 
     <div id="add-cat-modal" class="drawer-overlay" onclick="closeModal('add-cat-modal')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
-            <h3 style="font-size:0.9rem;">Add Custom Category</h3>
+            <h3 style="font-size:0.95rem;">Add Custom Category</h3>
             <input type="text" id="new-cat-input" placeholder="Category Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
             <button class="btn btn-primary" onclick="confirmAddCategory()">Add</button>
             <button class="btn" onclick="closeModal('add-cat-modal')">Cancel</button>
@@ -476,7 +469,6 @@
         }
 
         function openDrawer(drawerId) { 
-            // Isara muna lahat para iwas overlap
             document.querySelectorAll('.drawer-overlay').forEach(el => el.style.display = 'none');
             document.getElementById(drawerId).style.display = 'flex'; 
         }
@@ -495,14 +487,14 @@
             const container = document.getElementById('setlist-container');
             container.innerHTML = "";
             if (setLists.length === 0) {
-                container.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">No saved set lists.</span>`;
+                container.innerHTML = `<span style="font-size:0.78rem; color:var(--text-muted); font-style:italic;">No saved set lists.</span>`;
                 return;
             }
             setLists.forEach((sl, index) => {
                 let row = document.createElement('div');
                 row.className = 'category-row';
                 row.innerHTML = `
-                    <span style="font-size:0.8rem; font-weight:bold; color:var(--success);">${index + 1}. ${sl.worshipLeader}</span>
+                    <span style="font-size:0.85rem; font-weight:bold; color:var(--success);">${index + 1}. ${sl.worshipLeader}</span>
                     <button class="btn btn-sm btn-primary" onclick="loadSetListToActive(${index}); closeDrawer('drawer-setlist');">Load</button>
                 `;
                 container.appendChild(row);
@@ -520,15 +512,13 @@
 
         function renderActiveLineUpCanvas() {
             const container = document.getElementById('canvas-active-categories');
-            const drawerContainer = document.getElementById('drawer-active-categories');
             container.innerHTML = "";
-            drawerContainer.innerHTML = "";
 
             categories.forEach(cat => {
                 let songTitle = activeLineUp[cat];
                 let rowHtml = `
                     <span class="cat-label">♦️ ${cat}:</span>
-                    <span class="cat-song-title" onclick="${songTitle ? `playSong('${songTitle}')` : `openSelectSongModal('${cat}')`}">${songTitle ? '🎵 ' + songTitle : '<span style="color:var(--text-muted); font-style:italic;">Tap to assign</span>'}</span>
+                    <span class="cat-song-title" onclick="${songTitle ? `playSong('${songTitle}')` : `openSelectSongModal('${cat}')`}">${songTitle ? '🎵 ' + songTitle : '<span style="color:var(--text-muted); font-style:italic;">Tap to assign song</span>'}</span>
                     <div style="display:flex; gap:4px;">
                         ${songTitle ? `<button class="btn btn-sm" onclick="openEditSongDirect('${songTitle}')">Edit</button>` : ''}
                         <button class="btn btn-sm btn-primary" onclick="openSelectSongModal('${cat}')">${songTitle ? 'Change' : '+Select'}</button>
@@ -539,11 +529,6 @@
                 div1.className = 'category-row';
                 div1.innerHTML = rowHtml;
                 container.appendChild(div1);
-
-                let div2 = document.createElement('div');
-                div2.className = 'category-row';
-                div2.innerHTML = rowHtml;
-                drawerContainer.appendChild(div2);
             });
         }
 
@@ -554,7 +539,7 @@
             list.innerHTML = "";
             for (let title in songsDatabase) {
                 let div = document.createElement('div');
-                div.style.cssText = "background:#0f172a; padding:8px; border-radius:6px; cursor:pointer; font-size:0.8rem; color:#fff;";
+                div.style.cssText = "background:#0f172a; padding:8px; border-radius:6px; cursor:pointer; font-size:0.85rem; color:#fff;";
                 div.innerText = "🎵 " + title;
                 div.onclick = () => {
                     activeLineUp[cat] = title;
@@ -575,7 +560,7 @@
                     let div = document.createElement('div');
                     div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:6px 10px; border-radius:6px;";
                     div.innerHTML = `
-                        <span style="font-size:0.8rem; cursor:pointer; color:#fff;" onclick="playSong('${title}'); closeDrawer('drawer-songs');">🎵 ${title}</span>
+                        <span style="font-size:0.85rem; cursor:pointer; color:#fff;" onclick="playSong('${title}'); closeDrawer('drawer-songs');">🎵 ${title}</span>
                         <button class="btn btn-sm" onclick="openEditSongDirect('${title}')">Edit</button>
                     `;
                     container.appendChild(div);
@@ -630,8 +615,8 @@
                 let div = document.createElement('div');
                 div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:6px 10px; border-radius:6px;";
                 div.innerHTML = `
-                    <span style="font-size:0.78rem; color:var(--section); font-weight:bold;">♦️ ${cat}:</span>
-                    <select id="select-new-${cat}" style="background:#1e293b; color:#fff; border:1px solid #334155; padding:4px; border-radius:4px; font-size:0.75rem; width:60%;">
+                    <span style="font-size:0.8rem; color:var(--section); font-weight:bold;">♦️ ${cat}:</span>
+                    <select id="select-new-${cat}" style="background:#1e293b; color:#fff; border:1px solid #334155; padding:4px; border-radius:4px; font-size:0.8rem; width:60%;">
                         <option value="">-- Select Song --</option>
                         ${Object.keys(songsDatabase).map(t => `<option value="${t}">${t}</option>`).join('')}
                     </select>
