@@ -508,9 +508,17 @@ header {
     <!-- HOME -->
     <div id="view-home" class="view-section active">
 
-        <div class="active-lineup-screen" style="justify-content: center; align-items: center;">
-            <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 30px; border-radius: 12px;" onclick="openDrawer('drawer-setlist')">Start Jam</button>
+        <div class="active-lineup-screen">
+            <div class="screen-header">
+                <span>Active Line-up</span>
+                <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
+            </div>
+
+            <div id="canvas-active-categories" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Dynamically rendered categories go here -->
+            </div>
         </div>
+
     </div>
 
     <!-- EDIT -->
@@ -1343,6 +1351,8 @@ function renderActiveLineUpCanvas() {
 
     const container = document.getElementById("canvas-active-categories");
 
+    if (!container) return;
+
     container.innerHTML = "";
 
     categories.forEach(cat => {
@@ -1706,6 +1716,8 @@ async function deleteCurrentSong() {
 function renderNewLineUpForm() {
 
     const container = document.getElementById("new-lineup-selectors");
+
+    if (!container) return;
 
     container.innerHTML = "";
 
