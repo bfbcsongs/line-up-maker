@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -103,8 +102,7 @@ header {
     max-width: 65%;
 }
 
-.toolbar-tools::-webkit-scrollbar,
-.play-footer-bar::-webkit-scrollbar {
+.toolbar-tools::-webkit-scrollbar {
     display: none;
 }
 
@@ -324,35 +322,78 @@ header {
     resize: none;
     outline: none;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
-.play-footer-bar {
-    background: #131b2e;
-    border-top: 1px solid var(--panel-border);
-    padding: 8px 12px;
+/* Play View Workspace */
+.play-workspace {
     display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    flex-shrink: 0;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.output-box {
+    flex: 1;
+    padding: 12px 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: monospace;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    white-space: pre;
+    scroll-behavior: smooth;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Floating Translucent Jumper Bar directly positioned over the right margin */
+.play-right-bar {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
     z-index: 99;
-    box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
-    min-height: 48px;
-    align-items: center;
+    background: rgba(19, 27, 46, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.play-right-bar::-webkit-scrollbar {
+    display: none;
 }
 
 .jumper-chip {
-    background: #1e293b;
+    background: rgba(30, 41, 59, 0.4);
     color: var(--section);
-    border: 1px solid #334155;
-    padding: 6px 12px;
-    border-radius: 16px;
-    font-size: 0.75rem;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    padding: 6px 4px;
+    border-radius: 10px;
+    font-size: 0.6rem;
     font-weight: bold;
-    white-space: nowrap;
+    text-align: center;
+    width: 58px;
     cursor: pointer;
     text-transform: uppercase;
     flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .jumper-chip:active,
@@ -362,52 +403,45 @@ header {
     border-color: var(--highlight);
 }
 
-.output-box {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    overflow-x: auto;
-    font-family: monospace;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    white-space: pre;
-    scroll-behavior: smooth;
-    min-height: 0;
-}
-
 .chord {
     color: var(--chord);
     font-weight: bold;
 }
 
+/* Centered & Tight Spaced Section Blocks */
 .song-part-block {
     display: block;
-    margin-top: 14px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    padding: 2px 4px;
+    border-radius: 6px;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     border: 1px solid transparent;
+}
+
+.song-part-title-wrapper {
+    text-align: center;
+    margin-bottom: 2px;
 }
 
 .song-part-title {
     color: var(--section);
     font-weight: bold;
     text-transform: uppercase;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
     display: inline-block;
-    margin-bottom: 4px;
 }
 
 .song-part-content {
     display: block;
     white-space: pre;
+    line-height: 1.3;
 }
 
 .song-part-block.active-block {
-    background-color: rgba(250, 204, 21, 0.18) !important;
-    border-left: 5px solid var(--highlight) !important;
-    border-color: rgba(250, 204, 21, 0.3);
+    background-color: rgba(250, 204, 21, 0.12) !important;
+    border: 1px solid rgba(250, 204, 21, 0.3) !important;
 }
 
 .song-part-block.active-block .song-part-title {
@@ -433,6 +467,15 @@ header {
     .tool-btn {
         font-size: 0.65rem;
         padding: 4px 6px;
+    }
+
+    .play-right-bar {
+        right: 4px;
+    }
+
+    .jumper-chip {
+        width: 52px;
+        font-size: 0.56rem;
     }
 }
 </style>
@@ -465,17 +508,8 @@ header {
     <!-- HOME -->
     <div id="view-home" class="view-section active">
 
-        <div class="active-lineup-screen">
-
-            <div class="screen-header">
-                <span>Active Line-up</span>
-                <button class="btn btn-sm btn-success" onclick="openSaveLineupModal()">Save Line-up</button>
-            </div>
-
-            <div id="canvas-active-categories"
-                 style="display:flex; flex-direction:column; gap:8px;">
-            </div>
-
+        <div class="active-lineup-screen" style="justify-content: center; align-items: center;">
+            <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 30px; border-radius: 12px;" onclick="openDrawer('drawer-setlist')">Start Jam</button>
         </div>
     </div>
 
@@ -486,7 +520,7 @@ header {
 
             <div class="edit-topbar">
 
-                <button class="btn btn-sm" onclick="switchView('home')">⬅ Back</button>
+                <button class="btn btn-sm" onclick="goBackFromEdit()">⬅ Back</button>
 
                 <span id="edit-song-title-label"
                       style="font-weight:bold; color:var(--accent);">
@@ -524,7 +558,7 @@ Chorus lyrics here..."></textarea>
 
             <div class="edit-topbar">
 
-                <button class="btn btn-sm" onclick="switchView('home')">⬅ Back</button>
+                <button class="btn btn-sm" onclick="goBackFromPlay()">⬅ Back</button>
 
                 <span id="play-song-title"
                       style="font-weight:bold; color:var(--section);">
@@ -535,9 +569,10 @@ Chorus lyrics here..."></textarea>
 
             </div>
 
-            <div id="play-lyrics-box" class="output-box"></div>
-
-            <div id="floating-jumper-bar" class="play-footer-bar"></div>
+            <div class="play-workspace">
+                <div id="play-lyrics-box" class="output-box"></div>
+                <div id="floating-jumper-bar" class="play-right-bar"></div>
+            </div>
 
         </div>
     </div>
@@ -685,7 +720,7 @@ Chorus lyrics here..."></textarea>
 
 <script>
 /* ==========================================
-   GLOBAL VARIABLES
+   GLOBAL VARIABLES & HISTORY TRACKING
 ========================================== */
 
 let categories = ["Opening", "Joyful", "Solemn", "Offering", "Closing"];
@@ -700,6 +735,8 @@ let globalSemitones = 0;
 let activeEditingKey = null;
 let currentPlayingSong = { title: "", content: "" };
 let activeCategoryToAssign = null;
+
+let viewHistory = ["home"];
 
 const notesSharp = [
     "C", "C#", "D", "D#", "E", "F",
@@ -755,8 +792,6 @@ function initializeFirebase() {
         snapshot => {
 
             songTitles = snapshot.val() || {};
-
-            const currentData = songsDatabase;
 
             window.fbGet(
                 window.fbRef(window.fbDB, "worship_songs")
@@ -827,7 +862,7 @@ function initializeFirebase() {
 
 
 /* ==========================================
-   GENERAL HELPERS
+   GENERAL HELPERS & VIEW ROUTING
 ========================================== */
 
 function escapeHTML(value) {
@@ -848,24 +883,44 @@ function getSongKey(title) {
     return songKeys[title] || safeKey(title);
 }
 
-function switchView(viewName) {
-
+function switchView(viewName, pushHistory = true) {
     document.querySelectorAll(".view-section").forEach(el => {
         el.classList.remove("active");
     });
 
     document.getElementById("view-" + viewName).classList.add("active");
 
+    if (pushHistory) {
+        const currentTop = viewHistory[viewHistory.length - 1];
+        if (currentTop !== viewName) {
+            viewHistory.push(viewName);
+        }
+    }
+}
+
+function goBack() {
+    if (viewHistory.length > 1) {
+        viewHistory.pop();
+        const previousView = viewHistory[viewHistory.length - 1];
+        switchView(previousView, false);
+    } else {
+        switchView("home", false);
+    }
+}
+
+function goBackFromEdit() {
+    goBack();
+}
+
+function goBackFromPlay() {
+    goBack();
 }
 
 function openDrawer(drawerId) {
-
     document.querySelectorAll(".drawer-overlay").forEach(el => {
         el.style.display = "none";
     });
-
     document.getElementById(drawerId).style.display = "flex";
-
 }
 
 function closeDrawer(drawerId) {
@@ -940,7 +995,6 @@ function isSongPartHeading(line) {
 
     if (!text) return null;
 
-    // Remove brackets and optional colon
     text = text.replace(/^\[(.*?)\]$/, "$1").trim();
     text = text.replace(/:$/, "").trim();
 
@@ -996,8 +1050,6 @@ function formatChordLine(line) {
 
     const tokens = line.trim().split(/\s+/).filter(Boolean);
 
-    // Format a line only when it consists of chord symbols
-    // This avoids coloring ordinary lyric words as chords.
     const isChordLine =
         tokens.length > 0 &&
         tokens.every(token => {
@@ -1017,7 +1069,6 @@ function formatChordLine(line) {
 
     }
 
-    // Also support inline chord notation such as [C]Amazing grace
     return escapeHTML(line).replace(
         /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g,
         (match, chord) => {
@@ -1033,8 +1084,39 @@ function formatChordLine(line) {
 
 
 /* ==========================================
+   CONDITIONAL AUTO-COMPRESS ON OVERFLOW
+========================================== */
+
+function autoScaleContent() {
+
+    const box = document.getElementById("play-lyrics-box");
+    if (!box) return;
+
+    box.style.fontSize = "0.95rem";
+
+    const availableWidth = box.clientWidth - 20;
+
+    if (availableWidth <= 0) return;
+
+    let maxLineWidth = 0;
+
+    box.querySelectorAll(".song-part-content").forEach(el => {
+        if (el.scrollWidth > maxLineWidth) {
+            maxLineWidth = el.scrollWidth;
+        }
+    });
+
+    if (maxLineWidth > availableWidth) {
+        const scaleRatio = availableWidth / maxLineWidth;
+        let newFontSize = 0.95 * scaleRatio;
+        box.style.fontSize = Math.max(0.6, newFontSize).toFixed(2) + "rem";
+    }
+
+}
+
+
+/* ==========================================
    RENDER PLAY SCREEN
-   AUTOMATIC JUMPER GENERATION
 ========================================== */
 
 function renderPlayScreen() {
@@ -1070,10 +1152,12 @@ function renderPlayScreen() {
 
         htmlOutput += `
             <div id="${id}" class="song-part-block">
-                <span class="song-part-title"
-                      onclick="jumpToBlock('${id}')">
-                    [${escapeHTML(label)}]
-                </span>
+                <div class="song-part-title-wrapper">
+                    <span class="song-part-title"
+                          onclick="jumpToBlock('${id}')">
+                        [${escapeHTML(label)}]
+                    </span>
+                </div>
                 <div class="song-part-content">
         `;
 
@@ -1108,15 +1192,9 @@ function renderPlayScreen() {
 
         } else {
 
-            // If the song has no heading before its lyrics,
-            // automatically create an INTRO section.
-            if (!insideBlock) {
-
-                createBlock("INTRO");
-
+            if (insideBlock) {
+                htmlOutput += formatChordLine(line) + "\n";
             }
-
-            htmlOutput += formatChordLine(line) + "\n";
 
         }
 
@@ -1128,17 +1206,17 @@ function renderPlayScreen() {
 
     if (!hasContent) {
 
-        box.innerHTML = '<div class="empty-message">No song content available.</div>';
+        box.innerHTML = '<div class="empty-message">No song sections found. Please add section headers like [Verse 1] or [Chorus].</div>';
 
     }
 
-    // Reset scroll position whenever a new song is opened.
     box.scrollTop = 0;
 
-    // Reset jumper selection.
     jumper.querySelectorAll(".jumper-chip").forEach(chip => {
         chip.classList.remove("selected");
     });
+
+    requestAnimationFrame(autoScaleContent);
 
 }
 
@@ -1531,19 +1609,16 @@ async function saveSongFromEditor() {
 
     try {
 
-        // Save song content.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_songs/" + newKey),
             content
         );
 
-        // Save original display title separately.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_song_titles/" + newKey),
             title
         );
 
-        // Remove old song if renamed.
         if (activeEditingKey && activeEditingKey !== title) {
 
             const oldKey = getSongKey(activeEditingKey);
@@ -1880,7 +1955,7 @@ async function confirmAddCategory() {
 
 
 /* ==========================================
-   INITIALIZE PAGE
+   INITIALIZE PAGE & WINDOW RESIZE
 ========================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1889,6 +1964,12 @@ document.addEventListener("DOMContentLoaded", () => {
     renderNewLineUpForm();
     renderSetList();
 
+});
+
+window.addEventListener("resize", () => {
+    if (document.getElementById("view-play").classList.contains("active")) {
+        autoScaleContent();
+    }
 });
 
 </script>
