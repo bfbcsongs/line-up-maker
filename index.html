@@ -502,12 +502,22 @@ header {
 
 <div class="workspace">
 
-    <!-- HOME / ACTIVE LINEUP CANVAS VIEW -->
-    <div id="view-home" class="view-section active">
-        <div class="active-lineup-screen" style="justify-content: center; align-items: center;">
-            <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 30px; border-radius: 12px;" onclick="openDrawer('drawer-setlist')">Start Jam</button>
+    
+<div id="view-home" class="view-section active">
+    <div class="active-lineup-screen">
+        <div class="screen-header">
+            <span>ACTIVE LINE-UP</span>
+            <span id="home-worship-leader"></span>
         </div>
+        <div id="home-lineup-container"></div>
+        <button class="btn btn-primary" onclick="openDrawer('drawer-setlist')">
+            📋 Load Set List
+        </button>
+        <button class="btn btn-success" onclick="openSaveLineupModal()">
+            💾 Save Active Line-up
+        </button>
     </div>
+</div>
 
     <!-- EDIT -->
     <div id="view-edit" class="view-section">
@@ -936,34 +946,61 @@ function renderSetList() {
 }
 
 
+
 function loadSetListToActive(index) {
     const sl = setLists[index];
 
-    if (!sl) {
-        alert("Set List not found.");
+    if (!sl || !sl.lineup) {
+        alert("Unable to load this Set List.");
         return;
     }
 
-    if (!sl.lineup || typeof sl.lineup !== "object") {
-        alert("This Set List has no saved song assignments.");
-        return;
-    }
-
-    // Load the selected saved lineup into the active lineup.
     activeLineUp = { ...sl.lineup };
 
-    // Restore the Worship Leader name.
-    const wlInput = document.getElementById("save-wl-input");
-    if (wlInput) {
-        wlInput.value = sl.worshipLeader || "";
-    }
+    document.getElementById("home-worship-leader").textContent =
+        sl.worshipLeader || "Unnamed";
 
-    // Confirm successful loading.
+    renderActiveLineUp();
+
     closeDrawer("drawer-setlist");
-
-    alert("Loaded Set List: " + (sl.worshipLeader || "Unnamed"));
+    switchView("home");
 }
 
+function renderActiveLineUp() {
+    const container = document.getElementById("home-lineup-container");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const entries = Object.entries(activeLineUp);
+
+    if (!entries.length) {
+        container.innerHTML =
+            '<span class="empty-message">No songs assigned.</span>';
+        return;
+    }
+
+    entries.forEach(([category, song]) => {
+        const row = document.createElement("div");
+        row.className = "category-row";
+
+        const label = document.createElement("span");
+        label.className = "cat-label";
+        label.textContent = category;
+
+        const title = document.createElement("span");
+        title.className = "cat-song-title";
+        title.textContent = song;
+
+        title.onclick = () => {
+            if (songsDatabase[song]) playSong(song);
+            else alert("Song not found in database: " + song);
+        };
+
+        row.append(label, title);
+        container.appendChild(row);
+    });
+}
 
 function renderSongsDatabase() {
     const container = document.getElementById("songs-db-container");
