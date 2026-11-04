@@ -63,7 +63,7 @@
             overflow: hidden;
         }
 
-        /* Top Bar with Icon + Label Tools */
+        /* Top Bar */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
@@ -131,7 +131,7 @@
         }
         .view-section.active { display: flex; }
 
-        /* Active Line-up Main Screen (Center Workspace) */
+        /* Active Line-up Main Screen */
         .active-lineup-screen {
             flex: 1;
             margin: 10px;
@@ -219,6 +219,7 @@
             flex-direction: column;
             height: 100%;
             background: var(--bg-color);
+            position: relative;
         }
         .edit-topbar {
             display: flex;
@@ -227,6 +228,7 @@
             padding: 8px 12px;
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
+            z-index: 50;
         }
         .editor-textarea {
             flex: 1;
@@ -242,6 +244,7 @@
             outline: none;
         }
 
+        /* Floating Jumper Chips sa Ibaba */
         .floating-jumper-bar {
             position: absolute;
             bottom: 12px;
@@ -269,7 +272,9 @@
             font-weight: bold;
             white-space: nowrap;
             cursor: pointer;
+            text-transform: uppercase;
         }
+        .jumper-chip:hover { background: #334155; color: #fff; }
 
         .output-box {
             flex: 1;
@@ -284,24 +289,35 @@
         }
 
         .chord { color: var(--chord); font-weight: bold; }
+
+        /* Full Block Yellow Tint Highlight */
         .song-part-block {
             display: block;
             margin-top: 14px;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 6px;
             transition: background 0.3s ease;
         }
-        .song-part-title { color: var(--section); font-weight: bold; text-transform: uppercase; font-size: 0.9rem; }
+        .song-part-title { 
+            color: var(--section); 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            font-size: 0.9rem; 
+            cursor: pointer;
+            display: inline-block;
+        }
         .song-part-block.active-block {
-            background-color: rgba(250, 204, 21, 0.15);
+            background-color: rgba(250, 204, 21, 0.18);
             border-left: 4px solid var(--highlight);
         }
-        .song-part-block.active-block .song-part-title { color: var(--highlight) !important; }
+        .song-part-block.active-block .song-part-title { 
+            color: var(--highlight) !important; 
+        }
     </style>
 </head>
 <body>
 
-    <!-- Top Bar: App Name + Transpose + Labeled Icon Tools -->
+    <!-- Top Bar -->
     <header>
         <span class="brand-title">Line-up Maker</span>
         <div class="toolbar-tools">
@@ -319,7 +335,7 @@
     </header>
 
     <div class="workspace">
-        <!-- HOME SCREEN: Active Line-up directly on center screen -->
+        <!-- HOME SCREEN: Active Line-up -->
         <div id="view-home" class="view-section active">
             <div class="active-lineup-screen">
                 <div class="screen-header">
@@ -345,7 +361,7 @@
             </div>
         </div>
 
-        <!-- PLAY VIEW -->
+        <!-- PLAY VIEW WITH AUTO-DETECT & FULL BLOCK YELLOW HIGHLIGHT -->
         <div id="view-play" class="view-section">
             <div class="full-screen-container">
                 <div class="edit-topbar">
@@ -359,9 +375,7 @@
         </div>
     </div>
 
-    <!-- SLIDE-OUT DRAWERS -->
-    
-    <!-- 1. Set List Drawer -->
+    <!-- DRAWERS -->
     <div id="drawer-setlist" class="drawer-overlay" onclick="closeDrawer('drawer-setlist')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
             <h3 style="color:var(--success); font-size:0.95rem;">Set List (Saved Line-ups)</h3>
@@ -370,7 +384,6 @@
         </div>
     </div>
 
-    <!-- 2. Songs Database Drawer -->
     <div id="drawer-songs" class="drawer-overlay" onclick="closeDrawer('drawer-songs')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
             <h3 style="color:var(--accent); font-size:0.95rem;">Song Database</h3>
@@ -380,7 +393,6 @@
         </div>
     </div>
 
-    <!-- 3. New Line-up Drawer -->
     <div id="drawer-newlineup" class="drawer-overlay" onclick="closeDrawer('drawer-newlineup')">
         <div class="drawer-panel" onclick="event.stopPropagation()">
             <h3 style="color:var(--highlight); font-size:0.95rem;">Create New Line-up</h3>
@@ -670,6 +682,7 @@
             return notesSharp[newIdx] + suffix;
         }
 
+        /* Song Part Auto-Detect & Full Block Yellow Highlight */
         function renderPlayScreen() {
             const box = document.getElementById('play-lyrics-box');
             const jumper = document.getElementById('floating-jumper-bar');
