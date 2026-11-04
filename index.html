@@ -935,12 +935,35 @@ function renderSetList() {
     });
 }
 
+
 function loadSetListToActive(index) {
     const sl = setLists[index];
-    if (sl && sl.worshipLeader) {
-        alert("Loaded Set List: " + sl.worshipLeader);
+
+    if (!sl) {
+        alert("Set List not found.");
+        return;
     }
+
+    if (!sl.lineup || typeof sl.lineup !== "object") {
+        alert("This Set List has no saved song assignments.");
+        return;
+    }
+
+    // Load the selected saved lineup into the active lineup.
+    activeLineUp = { ...sl.lineup };
+
+    // Restore the Worship Leader name.
+    const wlInput = document.getElementById("save-wl-input");
+    if (wlInput) {
+        wlInput.value = sl.worshipLeader || "";
+    }
+
+    // Confirm successful loading.
+    closeDrawer("drawer-setlist");
+
+    alert("Loaded Set List: " + (sl.worshipLeader || "Unnamed"));
 }
+
 
 function renderSongsDatabase() {
     const container = document.getElementById("songs-db-container");
