@@ -325,41 +325,36 @@ header {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Play View Layout with Floating Translucent Floating Jumper Bar */
+/* Play View Workspace */
 .play-workspace {
     display: flex;
     flex: 1;
     position: relative;
     overflow: hidden;
     min-height: 0;
-    justify-content: center;
 }
 
 .output-box {
-    width: 100%;
-    max-width: 650px; /* Centered max container for clean reading */
-    margin: 0 auto;
-    padding: 16px 20px;
+    flex: 1;
+    padding: 12px 75px 12px 12px; /* Extra right padding so text doesn't slide under jumper */
     overflow-y: auto;
     overflow-x: hidden;
     font-family: monospace;
-    font-size: clamp(0.75rem, 2.2vw, 0.95rem); /* Auto-compress if text length/width is too long */
-    line-height: 1.4;
-    white-space: pre-wrap;
-    word-break: break-word;
+    font-size: 0.95rem; /* Default standard size */
+    line-height: 1.35;
+    white-space: pre;
     scroll-behavior: smooth;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
-    text-align: left;
 }
 
-/* Floating Translucent Jumper Icons on Right Edge */
+/* Floating Translucent Jumper Bar */
 .play-right-bar {
     position: absolute;
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    max-height: 75vh;
+    max-height: 80vh;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -370,7 +365,7 @@ header {
     background: rgba(19, 27, 46, 0.45);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
+    border-radius: 14px;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -382,12 +377,12 @@ header {
     background: rgba(30, 41, 59, 0.65);
     color: var(--section);
     border: 1px solid rgba(56, 189, 248, 0.2);
-    padding: 6px 8px;
-    border-radius: 12px;
-    font-size: 0.62rem;
+    padding: 6px 4px;
+    border-radius: 10px;
+    font-size: 0.6rem;
     font-weight: bold;
     text-align: center;
-    width: 64px;
+    width: 58px;
     cursor: pointer;
     text-transform: uppercase;
     flex-shrink: 0;
@@ -410,36 +405,40 @@ header {
     font-weight: bold;
 }
 
-/* Reduced spacing between song-part title and content */
+/* Centered & Tight Spaced Section Blocks */
 .song-part-block {
     display: block;
-    margin-top: 8px;
-    padding: 4px 0 8px 0;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    padding: 2px 4px;
     border-radius: 6px;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     border: 1px solid transparent;
+}
+
+.song-part-title-wrapper {
+    text-align: center; /* Center section names like [CHORUS] */
+    margin-bottom: 2px; /* Close distance to chords/lyrics below */
 }
 
 .song-part-title {
     color: var(--section);
     font-weight: bold;
     text-transform: uppercase;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     cursor: pointer;
     display: inline-block;
-    margin-bottom: 1px;
 }
 
 .song-part-content {
     display: block;
-    white-space: pre-wrap;
-    word-break: break-word;
+    white-space: pre;
+    line-height: 1.3;
 }
 
 .song-part-block.active-block {
     background-color: rgba(250, 204, 21, 0.12) !important;
-    border-left: 3px solid var(--highlight) !important;
-    padding-left: 6px;
+    border: 1px solid rgba(250, 204, 21, 0.3) !important;
 }
 
 .song-part-block.active-block .song-part-title {
@@ -469,13 +468,11 @@ header {
 
     .play-right-bar {
         right: 4px;
-        padding: 4px 2px;
     }
 
     .jumper-chip {
-        width: 54px;
-        font-size: 0.58rem;
-        padding: 5px 4px;
+        width: 52px;
+        font-size: 0.56rem;
     }
 }
 </style>
@@ -1071,6 +1068,46 @@ function formatChordLine(line) {
 
 
 /* ==========================================
+   CONDITIONAL AUTO-COMPRESS ON OVERFLOW
+========================================== */
+
+function autoScaleContent() {
+
+    const box = document.getElementById("play-lyrics-box");
+    if (!box) return;
+
+    // Reset back to standard readable baseline font size first
+    box.style.fontSize = "0.95rem";
+
+    const availableWidth = box.clientWidth - 85; // Available screen width inside box
+
+    if (availableWidth <= 0) return;
+
+    let maxLineWidth = 0;
+
+    // Measure maximum scroll width of song content blocks
+    box.querySelectorAll(".song-part-content").forEach(el => {
+        if (el.scrollWidth > maxLineWidth) {
+            maxLineWidth = el.scrollWidth;
+        }
+    });
+
+    // Compress font size ONLY IF text expands beyond the readable screen bounds
+    if (maxLineWidth > availableWidth) {
+
+        const scaleRatio = availableWidth / maxLineWidth;
+
+        let newFontSize = 0.95 * scaleRatio;
+
+        // Apply dynamic scale down (minimum safety cap at 0.6rem)
+        box.style.fontSize = Math.max(0.6, newFontSize).toFixed(2) + "rem";
+
+    }
+
+}
+
+
+/* ==========================================
    RENDER PLAY SCREEN
 ========================================== */
 
@@ -1107,10 +1144,12 @@ function renderPlayScreen() {
 
         htmlOutput += `
             <div id="${id}" class="song-part-block">
-                <span class="song-part-title"
-                      onclick="jumpToBlock('${id}')">
-                    [${escapeHTML(label)}]
-                </span>
+                <div class="song-part-title-wrapper">
+                    <span class="song-part-title"
+                          onclick="jumpToBlock('${id}')">
+                        [${escapeHTML(label)}]
+                    </span>
+                </div>
                 <div class="song-part-content">
         `;
 
@@ -1168,6 +1207,9 @@ function renderPlayScreen() {
     jumper.querySelectorAll(".jumper-chip").forEach(chip => {
         chip.classList.remove("selected");
     });
+
+    // Execute scale detection right after rendering DOM
+    requestAnimationFrame(autoScaleContent);
 
 }
 
@@ -1906,7 +1948,7 @@ async function confirmAddCategory() {
 
 
 /* ==========================================
-   INITIALIZE PAGE
+   INITIALIZE PAGE & WINDOW RESIZE
 ========================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1915,6 +1957,12 @@ document.addEventListener("DOMContentLoaded", () => {
     renderNewLineUpForm();
     renderSetList();
 
+});
+
+window.addEventListener("resize", () => {
+    if (document.getElementById("view-play").classList.contains("active")) {
+        autoScaleContent();
+    }
 });
 
 </script>
