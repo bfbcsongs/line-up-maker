@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -318,7 +317,7 @@ header {
     text-align: center;
 }
 
-/* NEW SONG ENTRY AREA */
+/* UNIFIED SONG EDITOR */
 
 #editor-textarea {
     display: block;
@@ -524,7 +523,7 @@ header {
         </div>
     </div>
 
-    <!-- EDIT VIEW -->
+    <!-- SONG VIEW -->
     <div id="view-edit" class="view-section">
         <div class="full-screen-container">
             <div class="edit-topbar">
@@ -532,7 +531,7 @@ header {
                 <span id="edit-song-title-label" style="font-weight:bold;color:var(--accent);">Song View</span>
                 <div style="display:flex;gap:4px;">
                     <button class="btn btn-sm btn-danger" onclick="deleteCurrentSong()">Delete</button>
-                    <button class="btn btn-sm btn-primary" onclick="openFullEditor()">Edit Source</button>
+                    <button class="btn btn-sm btn-primary" onclick="openFullEditor()">Edit</button>
                 </div>
             </div>
             <div class="editor-workspace">
@@ -541,17 +540,17 @@ header {
         </div>
     </div>
 
-    <!-- SOURCE EDITOR -->
-    <div id="view-source-edit" class="view-section">
+    <!-- UNIFIED ADD / EDIT SONG SCREEN -->
+    <div id="view-song-editor" class="view-section">
         <div class="full-screen-container">
             <div class="edit-topbar">
-                <button class="btn btn-sm" onclick="goBackFromSourceEditor()">⬅ Back</button>
-                <span id="source-editor-heading" style="font-weight:bold;color:var(--accent);">Edit Raw Song Source</span>
+                <button class="btn btn-sm" onclick="goBackFromSongEditor()">⬅ Back</button>
+                <span id="song-editor-heading" style="font-weight:bold;color:var(--accent);">Add Song Lyrics</span>
                 <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
             </div>
             <div class="editor-workspace">
                 <textarea id="editor-textarea"
-                    placeholder="Type or paste lyrics here..."></textarea>
+                    placeholder="Type or paste lyrics and chords here..."></textarea>
             </div>
         </div>
     </div>
@@ -697,6 +696,7 @@ let viewHistory = ["home"];
 let pendingSetListIndex = null;
 
 /* ADD SONG STATE */
+
 let newSongTitle = "";
 let isNewSongDraft = false;
 
@@ -831,12 +831,8 @@ function goBackFromPlay() {
     goBack();
 }
 
-function goBackFromSourceEditor() {
-    if (isNewSongDraft) {
-        goBack();
-    } else {
-        switchView("view-edit");
-    }
+function goBackFromSongEditor() {
+    goBack();
 }
 
 function openDrawer(drawerId) {
@@ -888,16 +884,23 @@ function confirmAddSongTitle() {
         return;
     }
 
+    if (songsDatabase[title]) {
+        alert("A song with this title already exists. Please use the Songs menu to edit it.");
+        input.focus();
+        return;
+    }
+
     newSongTitle = title;
     isNewSongDraft = true;
     activeEditingKey = null;
 
     document.getElementById("editor-textarea").value = "";
-    document.getElementById("source-editor-heading").textContent =
+    document.getElementById("song-editor-heading").textContent =
         "Add Song Lyrics";
 
     closeAddSongTitleModal();
-    switchView("view-source-edit");
+
+    switchView("view-song-editor");
 
     document.getElementById("editor-textarea").focus();
 }
@@ -948,13 +951,49 @@ function transposeNote(chord, semitones) {
 
 /* SONG FORMATTING */
 
+/*
+   Recognizes the requested section labels when they appear
+   alone on their own line:
+
+   Intro:
+   Verse:
+   Chorus:
+   Bridge:
+   Adlib:
+   Outro:
+
+   Existing bracketed section headings are also retained
+   for compatibility with previously saved songs.
+*/
+
 function isSongPartHeading(line) {
-    let text = line.trim();
+    const text = line.trim();
     if (!text) return null;
 
-    text = text.replace(/^\[(.*?)\]$/, "$1").trim().replace(/:$/, "").trim();
+    const colonLabels = [
+        "Intro",
+        "Verse",
+        "Chorus",
+        "Bridge",
+        "Adlib",
+        "Outro"
+    ];
 
-    const patterns = [
+    const colonMatch = colonLabels.find(label =>
+        new RegExp("^" + label + ":$", "i").test(text)
+    );
+
+    if (colonMatch) {
+        return colonMatch.toUpperCase();
+    }
+
+    const bracketMatch = text.match(/^\[(.*?)\]$/);
+
+    if (!bracketMatch) return null;
+
+    const legacyText = bracketMatch[1].trim();
+
+    const legacyPatterns = [
         /^intro(?:duction)?$/i,
         /^verse(?:\s*\d+)?$/i,
         /^v(?:erse)?\s*\d+$/i,
@@ -980,7 +1019,9 @@ function isSongPartHeading(line) {
         /^prayer$/i
     ];
 
-    return patterns.some(pattern => pattern.test(text)) ? text.toUpperCase() : null;
+    return legacyPatterns.some(pattern => pattern.test(legacyText))
+        ? legacyText.toUpperCase()
+        : null;
 }
 
 function isChordToken(token) {
@@ -1129,7 +1170,7 @@ function renderSongContent(box, jumper, isPlayMode) {
     closeBlock();
 
     box.innerHTML = htmlOutput ||
-        '<div class="empty-message">No song sections found. Add section headers like [Verse 1].</div>';
+        '<div class="empty-message">No song sections found. Add section labels such as Intro: or Verse: on their own lines.</div>';
 
     box.scrollTop = 0;
 }
@@ -1428,51 +1469,71 @@ function openEditSongDirect(title) {
     switchView("view-edit");
 }
 
+/* EDIT BUTTON: OPEN THE SAME EDITOR USED BY ADD SONG */
+
 function openFullEditor() {
-    if (activeEditingKey) {
-        isNewSongDraft = false;
+    if (!currentPlayingSong.title) return;
 
-        document.getElementById("source-editor-heading").textContent =
-            "Edit Raw Song Source";
+    activeEditingKey = currentPlayingSong.title;
+    isNewSongDraft = false;
+    newSongTitle = "";
 
-        document.getElementById("editor-textarea").value =
-            `[${activeEditingKey}]\n\n` +
-            (songsDatabase[activeEditingKey] || "");
-    }
+    document.getElementById("song-editor-heading").textContent =
+        "Edit Song Lyrics";
 
-    switchView("view-source-edit");
+    document.getElementById("editor-textarea").value =
+        currentPlayingSong.content || "";
+
+    switchView("view-song-editor");
+
+    document.getElementById("editor-textarea").focus();
 }
 
 function openPlayToEdit() {
-    if (currentPlayingSong.title) {
-        openEditSongDirect(currentPlayingSong.title);
-    }
+    if (!currentPlayingSong.title) return;
+
+    activeEditingKey = currentPlayingSong.title;
+    isNewSongDraft = false;
+    newSongTitle = "";
+
+    document.getElementById("song-editor-heading").textContent =
+        "Edit Song Lyrics";
+
+    document.getElementById("editor-textarea").value =
+        currentPlayingSong.content || "";
+
+    switchView("view-song-editor");
+
+    document.getElementById("editor-textarea").focus();
 }
 
-async function saveSongFromEditor() {
-    const text = document.getElementById("editor-textarea").value.trim();
+/* SAVE NEW OR EDITED SONG */
 
-    if (!text) return alert("Please enter song content.");
-    if (!window.fbDB) return alert("Firebase is not connected.");
+async function saveSongFromEditor() {
+    const content = document.getElementById("editor-textarea").value.trim();
+
+    if (!content) {
+        return alert("Please enter song lyrics.");
+    }
+
+    if (!window.fbDB) {
+        return alert("Firebase is not connected.");
+    }
 
     let title;
-    let content;
 
     if (isNewSongDraft) {
         title = newSongTitle.trim();
-        content = text;
 
         if (!title) {
             return alert("Song title is missing. Please start again.");
         }
     } else {
-        const match = text.match(/^\[(.*?)\]/);
-        title = match ? match[1].trim() : "Untitled";
-        content = text.replace(/^\[.*?\]\s*/, "").trim();
-    }
+        title = activeEditingKey;
 
-    if (!content) {
-        return alert("Please enter song lyrics.");
+        if (!title) {
+            return alert("Song title is missing.");
+        }
     }
 
     const newKey = safeKey(title);
@@ -1498,13 +1559,27 @@ async function saveSongFromEditor() {
         };
 
         document.getElementById("edit-song-title-label").textContent = title;
-        document.getElementById("source-editor-heading").textContent =
-            "Edit Raw Song Source";
+        document.getElementById("play-song-title").textContent = title;
+
+        /*
+           Return to the song view after saving.
+           Remove the editor from history so Back does not
+           reopen the editor immediately.
+        */
+
+        if (viewHistory[viewHistory.length - 1] === "song-editor") {
+            viewHistory.pop();
+        }
+
+        if (viewHistory[viewHistory.length - 1] !== "edit") {
+            viewHistory.push("edit");
+        }
 
         renderEditScreen();
-        switchView("view-edit");
+        switchView("view-edit", false);
 
         alert("Song saved successfully!");
+
     } catch (error) {
         alert("Error saving song: " + error.message);
     }
@@ -1527,7 +1602,10 @@ async function deleteCurrentSong() {
         );
 
         activeEditingKey = null;
-        switchView("home");
+        currentPlayingSong = { title: "", content: "" };
+
+        viewHistory = ["home"];
+        switchView("home", false);
 
         alert("Song deleted.");
     } catch (error) {
