@@ -309,36 +309,8 @@ header {
     gap: 6px;
 }
 
-/* Centered Layout for Editor Workspace */
-.editor-workspace {
-    display: flex;
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    min-height: 0;
-    justify-content: center;
-}
-
-.editor-textarea {
-    flex: 1;
-    max-width: 800px;
-    width: 100%;
-    background: transparent;
-    color: var(--text-main);
-    border: none;
-    padding: 16px 20px;
-    font-family: monospace;
-    font-size: 1.1rem;
-    line-height: 1.8;
-    resize: none;
-    outline: none;
-    min-height: 0;
-    -webkit-overflow-scrolling: touch;
-    text-align: center;
-}
-
-/* Play View Workspace */
-.play-workspace {
+/* Centered Layout for Editor / Play Workspaces */
+.editor-workspace, .play-workspace {
     display: flex;
     flex: 1;
     position: relative;
@@ -516,7 +488,7 @@ header {
         min-height: 36px;
         font-size: 0.65rem;
     }
-    .output-box, .editor-textarea {
+    .output-box {
         font-size: 1rem;
         padding: 10px;
     }
@@ -565,19 +537,33 @@ header {
     </div>
 </div>
 
-    <!-- EDIT -->
+    <!-- EDIT (Read-Only Chords-on-Top View matching Play Mode) -->
     <div id="view-edit" class="view-section">
         <div class="full-screen-container">
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromEdit()">⬅ Back</button>
-                <span id="edit-song-title-label" style="font-weight:bold; color:var(--accent);">Edit Song</span>
+                <span id="edit-song-title-label" style="font-weight:bold; color:var(--accent);">Song View</span>
                 <div style="display:flex; gap:4px;">
                     <button class="btn btn-sm btn-danger" onclick="deleteCurrentSong()">Delete</button>
-                    <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
+                    <button class="btn btn-sm btn-primary" onclick="openFullEditor()">Edit Source</button>
                 </div>
             </div>
             <div class="editor-workspace">
-                <textarea id="editor-textarea" class="editor-textarea" placeholder="[Intro]..."></textarea>
+                <div id="edit-lyrics-box" class="output-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL SOURCE EDITOR MODAL / VIEW -->
+    <div id="view-source-edit" class="view-section">
+        <div class="full-screen-container">
+            <div class="edit-topbar">
+                <button class="btn btn-sm" onclick="switchView('view-edit')">⬅ Back</button>
+                <span style="font-weight:bold; color:var(--accent);">Edit Raw Song Source</span>
+                <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
+            </div>
+            <div class="editor-workspace">
+                <textarea id="editor-textarea" class="output-box" style="width:100%; background:transparent; border:none; outline:none; font-family:monospace; text-align:left; resize:none;" placeholder="[Intro]..."></textarea>
             </div>
         </div>
     </div>
@@ -767,7 +753,7 @@ function escapeHTML(value) {
 }
 
 function safeKey(title) {
-    return title.replace(/[.#$/\[\]]/g, "_");
+    return title.replace(/[\.#$/\[\]]/g, "_");
 }
 
 function getSongKey(title) {
@@ -822,6 +808,9 @@ function transposeGlobal(amount) {
     if (el) el.innerText = globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
     if (document.getElementById("view-play")?.classList.contains("active")) {
         renderPlayScreen();
+    }
+    if (document.getElementById("view-edit")?.classList.contains("active")) {
+        renderEditScreen();
     }
 }
 
@@ -961,6 +950,88 @@ function renderPlayScreen() {
     box.scrollTop = 0;
 }
 
+function renderEditScreen() {
+    const box = document.getElementById("edit-lyrics-box");
+    if (!box) return;
+
+    box.innerHTML = "";
+    const content = currentPlayingSong.content || "";
+    const rawLines = content.split(/\r?\n/);
+    
+    let htmlOutput = "";
+    let insideBlock = false;
+    let pendingChords = "";
+
+    function closeBlock() {
+        if (insideBlock) {
+            if (pendingChords) {
+                htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
+                pendingChords = "";
+            }
+            htmlOutput += "</div></div>\n";
+            insideBlock = false;
+        }
+    }
+
+    function createBlock(label) {
+        htmlOutput += `
+            <div class="song-part-block">
+                <div class="song-part-title-wrapper">
+                    <span class="song-part-title">[${escapeHTML(label)}]</span>
+                </div>
+                <div class="song-part-content">
+        `;
+        insideBlock = true;
+    }
+
+    const chordRegex = /[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?/g;
+
+    for (let i = 0; i < rawLines.length; i++) {
+        const line = rawLines[i];
+        const trimmed = line.trim();
+        const detectedPart = isSongPartHeading(trimmed);
+
+        if (detectedPart) {
+            closeBlock();
+            createBlock(detectedPart);
+        } else if (insideBlock) {
+            if (!trimmed) {
+                if (pendingChords) {
+                    htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
+                    pendingChords = "";
+                }
+                continue;
+            }
+
+            if (isPureChordLine(trimmed)) {
+                if (pendingChords) {
+                    htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
+                }
+                pendingChords = trimmed.replace(chordRegex, chord => `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`);
+            } else {
+                let lyricText = escapeHTML(line);
+                lyricText = lyricText.replace(/\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g, (match, chord) => {
+                    return `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`;
+                });
+
+                const chordsToRender = pendingChords;
+                pendingChords = "";
+
+                htmlOutput += `
+                    <div class="lyric-line-wrapper">
+                        ${chordsToRender ? `<div class="chord-line">${chordsToRender}</div>` : ''}
+                        <div class="lyric-text-line">${lyricText}</div>
+                    </div>
+                `;
+            }
+        }
+    }
+    closeBlock();
+
+    box.innerHTML = htmlOutput || '<div class="empty-message">No song sections found.</div>';
+    box.scrollTop = 0;
+}
+
 function jumpToBlock(id) {
     const box = document.getElementById("play-lyrics-box");
     const target = document.getElementById(id);
@@ -1058,7 +1129,7 @@ function renderActiveLineUp() {
 
         title.onclick = () => {
             if (songsDatabase[song] !== undefined) {
-                playSong(song);
+                openEditSongDirect(song);
             } else {
                 alert("Song not found: " + song);
             }
@@ -1095,7 +1166,7 @@ function renderSongsDatabase() {
 
         const edit = document.createElement("button");
         edit.className = "btn btn-sm";
-        edit.textContent = "Edit";
+        edit.textContent = "View";
         edit.onclick = () => { openEditSongDirect(title); closeDrawer("drawer-songs"); };
 
         row.append(name, edit);
@@ -1105,16 +1176,24 @@ function renderSongsDatabase() {
 
 function openAddSongModal() {
     activeEditingKey = null;
-    document.getElementById("edit-song-title-label").textContent = "Add New Song";
     document.getElementById("editor-textarea").value = "[Untitled Song]\n\n[Intro]\nC   G\n\n[Verse 1]\nC   G\nLyrics here...";
-    switchView("edit");
+    switchView("view-source-edit");
 }
 
 function openEditSongDirect(title) {
     activeEditingKey = title;
-    document.getElementById("edit-song-title-label").textContent = "Edit: " + title;
+    currentPlayingSong = { title: title, content: songsDatabase[title] };
+    document.getElementById("edit-song-title-label").textContent = title;
     document.getElementById("editor-textarea").value = `[${title}]\n\n` + (songsDatabase[title] || "");
-    switchView("edit");
+    renderEditScreen();
+    switchView("view-edit");
+}
+
+function openFullEditor() {
+    if (activeEditingKey) {
+        document.getElementById("editor-textarea").value = `[${activeEditingKey}]\n\n` + (songsDatabase[activeEditingKey] || "");
+    }
+    switchView("view-source-edit");
 }
 
 function openEditorFromPlay() {
@@ -1135,7 +1214,10 @@ async function saveSongFromEditor() {
         await window.fbSet(window.fbRef(window.fbDB, "worship_songs/" + newKey), content);
         await window.fbSet(window.fbRef(window.fbDB, "worship_song_titles/" + newKey), title);
         activeEditingKey = title;
-        switchView("home");
+        currentPlayingSong = { title: title, content: content };
+        document.getElementById("edit-song-title-label").textContent = title;
+        renderEditScreen();
+        switchView("view-edit");
         alert("Song saved successfully!");
     } catch (e) {
         alert("Error saving song: " + e.message);
@@ -1193,7 +1275,7 @@ function renderNewLineUpForm() {
 
 async function saveNewLineUpFromForm() {
     const wlName = document.getElementById("new-wl-name").value.trim();
-    if (!wlName) return alert("Please input Worship Leader Name Name.");
+    if (!wlName) return alert("Please input Worship Leader Name.");
 
     const tempLineup = {};
     categories.forEach((cat, index) => {
