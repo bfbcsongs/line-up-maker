@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -317,6 +318,37 @@ header {
     text-align: center;
 }
 
+/* NEW SONG ENTRY AREA */
+
+#editor-textarea {
+    display: block;
+    flex: 1;
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    min-height: 0;
+    margin: 0 auto;
+    padding: 20px 16px;
+    background: transparent;
+    color: var(--text-main);
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    text-align: center;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    -webkit-overflow-scrolling: touch;
+}
+
+#editor-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.8;
+    text-align: center;
+}
+
 /* SONG PARTS */
 
 .song-part-block {
@@ -453,6 +485,10 @@ header {
     .jumper-chip { width: 62px; min-height: 36px; font-size: 0.65rem; }
     .output-box { font-size: 1rem; padding: 10px; }
     .lyric-text-line { font-size: 1.05rem; }
+    #editor-textarea {
+        font-size: 1rem;
+        padding: 16px 10px;
+    }
 }
 </style>
 </head>
@@ -509,14 +545,13 @@ header {
     <div id="view-source-edit" class="view-section">
         <div class="full-screen-container">
             <div class="edit-topbar">
-                <button class="btn btn-sm" onclick="switchView('view-edit')">⬅ Back</button>
-                <span style="font-weight:bold;color:var(--accent);">Edit Raw Song Source</span>
+                <button class="btn btn-sm" onclick="goBackFromSourceEditor()">⬅ Back</button>
+                <span id="source-editor-heading" style="font-weight:bold;color:var(--accent);">Edit Raw Song Source</span>
                 <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
             </div>
             <div class="editor-workspace">
-                <textarea id="editor-textarea" class="output-box"
-                    style="width:100%;background:transparent;border:none;outline:none;font-family:monospace;text-align:left;resize:none;"
-                    placeholder="[Intro]..."></textarea>
+                <textarea id="editor-textarea"
+                    placeholder="Type or paste lyrics here..."></textarea>
             </div>
         </div>
     </div>
@@ -536,6 +571,26 @@ header {
         </div>
     </div>
 
+</div>
+
+<!-- ADD SONG TITLE MODAL -->
+<div id="add-song-title-modal" class="drawer-overlay"
+     onclick="closeAddSongTitleModal()">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+        <h3 style="font-size:0.95rem;color:var(--accent);">Add Song</h3>
+
+        <input
+            type="text"
+            id="new-song-title-input"
+            placeholder="Enter Song Title..."
+            autocomplete="off"
+            style="background:#0f172a;border:1px solid #334155;color:#fff;padding:10px;border-radius:6px;font-size:0.9rem;width:100%;">
+
+        <div style="display:flex;gap:8px;">
+            <button class="btn" style="flex:1;" onclick="closeAddSongTitleModal()">Back</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="confirmAddSongTitle()">OK</button>
+        </div>
+    </div>
 </div>
 
 <!-- SET LIST DRAWER -->
@@ -641,6 +696,10 @@ let activeCategoryToAssign = null;
 let viewHistory = ["home"];
 let pendingSetListIndex = null;
 
+/* ADD SONG STATE */
+let newSongTitle = "";
+let isNewSongDraft = false;
+
 const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 let firebaseInitialized = false;
 
@@ -726,7 +785,7 @@ function getSongKey(title) {
     return songKeys[title] || safeKey(title);
 }
 
-/* FIXED VIEW SWITCHING */
+/* VIEW SWITCHING */
 
 function switchView(viewName, pushHistory = true) {
     const normalizedName = viewName.startsWith("view-")
@@ -764,8 +823,21 @@ function goBack() {
     }
 }
 
-function goBackFromEdit() { goBack(); }
-function goBackFromPlay() { goBack(); }
+function goBackFromEdit() {
+    goBack();
+}
+
+function goBackFromPlay() {
+    goBack();
+}
+
+function goBackFromSourceEditor() {
+    if (isNewSongDraft) {
+        goBack();
+    } else {
+        switchView("view-edit");
+    }
+}
 
 function openDrawer(drawerId) {
     document.querySelectorAll(".drawer-overlay").forEach(el =>
@@ -785,6 +857,52 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.style.display = "none";
 }
+
+/* ADD SONG TITLE MODAL */
+
+function openAddSongModal() {
+    document.getElementById("new-song-title-input").value = "";
+
+    document.querySelectorAll(".drawer-overlay").forEach(el =>
+        el.style.display = "none"
+    );
+
+    document.getElementById("add-song-title-modal").style.display = "flex";
+
+    setTimeout(() => {
+        document.getElementById("new-song-title-input").focus();
+    }, 100);
+}
+
+function closeAddSongTitleModal() {
+    closeModal("add-song-title-modal");
+}
+
+function confirmAddSongTitle() {
+    const input = document.getElementById("new-song-title-input");
+    const title = input.value.trim();
+
+    if (!title) {
+        alert("Please enter the song title.");
+        input.focus();
+        return;
+    }
+
+    newSongTitle = title;
+    isNewSongDraft = true;
+    activeEditingKey = null;
+
+    document.getElementById("editor-textarea").value = "";
+    document.getElementById("source-editor-heading").textContent =
+        "Add Song Lyrics";
+
+    closeAddSongTitleModal();
+    switchView("view-source-edit");
+
+    document.getElementById("editor-textarea").focus();
+}
+
+/* TRANSPOSE */
 
 function transposeGlobal(amount) {
     globalSemitones += amount;
@@ -827,6 +945,8 @@ function transposeNote(chord, semitones) {
     return shift(match[1]) + match[2] +
         (match[3] ? "/" + shift(match[3]) : "");
 }
+
+/* SONG FORMATTING */
 
 function isSongPartHeading(line) {
     let text = line.trim();
@@ -1238,6 +1358,8 @@ function playLineUpSongAt(index) {
     switchView("play");
 }
 
+/* SONG DATABASE */
+
 function renderSongsDatabase() {
     const container = document.getElementById("songs-db-container");
     const searchInput = document.getElementById("song-search-input");
@@ -1288,17 +1410,12 @@ function renderSongsDatabase() {
     });
 }
 
-function openAddSongModal() {
-    activeEditingKey = null;
-
-    document.getElementById("editor-textarea").value =
-        "[Untitled Song]\n\n[Intro]\n\n[Verse 1]\n[C]Lyrics here...";
-
-    switchView("view-source-edit");
-}
+/* ADD / EDIT SONG */
 
 function openEditSongDirect(title) {
     activeEditingKey = title;
+    isNewSongDraft = false;
+    newSongTitle = "";
 
     currentPlayingSong = {
         title: title,
@@ -1313,6 +1430,11 @@ function openEditSongDirect(title) {
 
 function openFullEditor() {
     if (activeEditingKey) {
+        isNewSongDraft = false;
+
+        document.getElementById("source-editor-heading").textContent =
+            "Edit Raw Song Source";
+
         document.getElementById("editor-textarea").value =
             `[${activeEditingKey}]\n\n` +
             (songsDatabase[activeEditingKey] || "");
@@ -1333,9 +1455,26 @@ async function saveSongFromEditor() {
     if (!text) return alert("Please enter song content.");
     if (!window.fbDB) return alert("Firebase is not connected.");
 
-    const match = text.match(/^\[(.*?)\]/);
-    const title = match ? match[1].trim() : "Untitled";
-    const content = text.replace(/^\[.*?\]\s*/, "").trim();
+    let title;
+    let content;
+
+    if (isNewSongDraft) {
+        title = newSongTitle.trim();
+        content = text;
+
+        if (!title) {
+            return alert("Song title is missing. Please start again.");
+        }
+    } else {
+        const match = text.match(/^\[(.*?)\]/);
+        title = match ? match[1].trim() : "Untitled";
+        content = text.replace(/^\[.*?\]\s*/, "").trim();
+    }
+
+    if (!content) {
+        return alert("Please enter song lyrics.");
+    }
+
     const newKey = safeKey(title);
 
     try {
@@ -1350,6 +1489,8 @@ async function saveSongFromEditor() {
         );
 
         activeEditingKey = title;
+        isNewSongDraft = false;
+        newSongTitle = "";
 
         currentPlayingSong = {
             title: title,
@@ -1357,6 +1498,8 @@ async function saveSongFromEditor() {
         };
 
         document.getElementById("edit-song-title-label").textContent = title;
+        document.getElementById("source-editor-heading").textContent =
+            "Edit Raw Song Source";
 
         renderEditScreen();
         switchView("view-edit");
@@ -1391,6 +1534,8 @@ async function deleteCurrentSong() {
         alert("Error deleting song: " + error.message);
     }
 }
+
+/* LINE-UP FORM */
 
 function renderNewLineUpForm() {
     const container = document.getElementById("new-lineup-selectors");
@@ -1512,6 +1657,8 @@ async function confirmSaveActiveLineUp() {
     }
 }
 
+/* PLAY SONG */
+
 function playSong(title) {
     if (!(title in songsDatabase)) {
         return alert("Song not found.");
@@ -1527,6 +1674,8 @@ function playSong(title) {
     renderPlayScreen();
     switchView("play");
 }
+
+/* QR */
 
 function openQRModal() {
     const localUrl = window.location.href;
@@ -1546,6 +1695,8 @@ function openQRModal() {
 
     document.getElementById("qr-modal").style.display = "flex";
 }
+
+/* CATEGORIES */
 
 function openAddCategoryModal() {
     document.getElementById("add-cat-modal").style.display = "flex";
@@ -1580,9 +1731,18 @@ async function confirmAddCategory() {
     }
 }
 
+/* INITIALIZE */
+
 document.addEventListener("DOMContentLoaded", () => {
     renderNewLineUpForm();
     renderSetList();
+
+    document.getElementById("new-song-title-input")
+        .addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                confirmAddSongTitle();
+            }
+        });
 });
 </script>
 
