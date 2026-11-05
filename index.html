@@ -309,6 +309,30 @@ header {
     gap: 6px;
 }
 
+/* Edit Switcher Tabs */
+.edit-mode-tabs {
+    display: flex;
+    background: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    overflow: hidden;
+}
+
+.edit-tab-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.edit-tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+}
+
 .editor-textarea {
     flex: 1;
     width: 100%;
@@ -323,6 +347,85 @@ header {
     outline: none;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Visual Chord Editor Workspace */
+.visual-chord-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-color);
+}
+
+.chord-canvas-box {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.interactive-char {
+    display: inline-block;
+    padding: 1px 2px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.interactive-char:hover {
+    background: rgba(56, 189, 248, 0.2);
+}
+
+.interactive-char.selected-char {
+    background: var(--highlight) !important;
+    color: #000 !important;
+    font-weight: bold;
+    outline: 2px solid #fff;
+}
+
+.chord-popup-bar {
+    background: var(--panel-bg);
+    border-top: 1px solid var(--panel-border);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.chord-palette {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.chord-palette::-webkit-scrollbar {
+    display: none;
+}
+
+.chord-choice-btn {
+    background: #1e293b;
+    color: var(--highlight);
+    border: 1px solid #334155;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.chord-choice-btn:hover {
+    background: var(--highlight);
+    color: #000;
 }
 
 /* Play View Workspace */
@@ -448,7 +551,6 @@ header {
     width: 100%;
 }
 
-/* Karaoke Style Chord & Lyric Spacing */
 .chord-line {
     display: flex;
     justify-content: center;
@@ -468,13 +570,11 @@ header {
     letter-spacing: 0.5px;
 }
 
-/* CHORD COLOR */
 .chord {
     color: #facc15 !important;
     font-weight: bold;
 }
 
-/* Selected Jumper - Yellow Outline Only */
 .jumper-chip:active,
 .jumper-chip.selected {
     background: rgba(30, 41, 59, 0.08) !important;
@@ -557,12 +657,32 @@ header {
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromEdit()">⬅ Back</button>
                 <span id="edit-song-title-label" style="font-weight:bold; color:var(--accent);">Edit Song</span>
+                
+                <div class="edit-mode-tabs">
+                    <button id="tab-btn-lyrics" class="edit-tab-btn active" onclick="switchEditMode('lyrics')">Lyrics</button>
+                    <button id="tab-btn-chords" class="edit-tab-btn" onclick="switchEditMode('chords')">Chords</button>
+                </div>
+
                 <div style="display:flex; gap:4px;">
                     <button class="btn btn-sm btn-danger" onclick="deleteCurrentSong()">Delete</button>
                     <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
                 </div>
             </div>
+
+            <!-- Lyrics Textarea Mode -->
             <textarea id="editor-textarea" class="editor-textarea" placeholder="[Intro]..."></textarea>
+
+            <!-- Visual Tap-to-Chord Mode -->
+            <div id="visual-chord-editor" class="visual-chord-editor" style="display:none;">
+                <div id="chord-canvas-box" class="chord-canvas-box"></div>
+                <div class="chord-popup-bar">
+                    <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                        <span>Tap any letter above to assign/change chord:</span>
+                        <button class="btn btn-sm btn-danger" onclick="removeSelectedChord()" style="padding:2px 6px;">Remove Chord</button>
+                    </div>
+                    <div id="chord-palette" class="chord-palette"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -668,8 +788,10 @@ let activeEditingKey = null;
 let currentPlayingSong = { title: "", content: "" };
 let activeCategoryToAssign = null;
 let viewHistory = ["home"];
+let selectedCharIndex = null;
 
 const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const commonChords = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "Dm", "Em", "Am", "F#m", "Bm", "G7", "C7", "D7", "A7", "E7", "B7"];
 let firebaseInitialized = false;
 
 window.addEventListener("firebase-ready", initializeFirebase);
@@ -800,6 +922,95 @@ function closeModal(modalId) {
     if (m) m.style.display = "none";
 }
 
+function switchEditMode(mode) {
+    const textarea = document.getElementById("editor-textarea");
+    const chordEditor = document.getElementById("visual-chord-editor");
+    const tabLyrics = document.getElementById("tab-btn-lyrics");
+    const tabChords = document.getElementById("tab-btn-chords");
+
+    if (mode === 'lyrics') {
+        // If switching back from chords, ensure textarea has latest content
+        chordEditor.style.display = "none";
+        textarea.style.display = "block";
+        tabLyrics.classList.add("active");
+        tabChords.classList.remove("active");
+    } else {
+        // Switching to visual chords mode
+        textarea.style.display = "none";
+        chordEditor.style.display = "flex";
+        tabChords.classList.add("active");
+        tabLyrics.classList.remove("active");
+        renderVisualChordCanvas();
+        renderChordPalette();
+    }
+}
+
+function renderChordPalette() {
+    const palette = document.getElementById("chord-palette");
+    palette.innerHTML = "";
+    commonChords.forEach(chord => {
+        const btn = document.createElement("button");
+        btn.className = "chord-choice-btn";
+        btn.textContent = chord;
+        btn.onclick = () => assignChordToSelected(chord);
+        palette.appendChild(btn);
+    });
+}
+
+function renderVisualChordCanvas() {
+    const canvas = document.getElementById("chord-canvas-box");
+    const text = document.getElementById("editor-textarea").value;
+    canvas.innerHTML = "";
+    selectedCharIndex = null;
+
+    for (let i = 0; i < text.length; i++) {
+        const span = document.createElement("span");
+        span.className = "interactive-char";
+        span.textContent = text[i] === "\n" ? "\n" : text[i];
+        if (text[i] === "\n") span.style.display = "block";
+        span.dataset.index = i;
+        span.onclick = (e) => {
+            e.stopPropagation();
+            canvas.querySelectorAll(".interactive-char").forEach(c => c.classList.remove("selected-char"));
+            span.classList.add("selected-char");
+            selectedCharIndex = i;
+        };
+        canvas.appendChild(span);
+    }
+}
+
+function assignChordToSelected(chordName) {
+    if (selectedCharIndex === null) {
+        alert("Please tap a specific letter/character first.");
+        return;
+    }
+    const textarea = document.getElementById("editor-textarea");
+    let text = textarea.value;
+
+    // Insert [ChordName] right before the selected character index
+    text = text.slice(0, selectedCharIndex) + `[${chordName}]` + text.slice(selectedCharIndex);
+    textarea.value = text;
+    renderVisualChordCanvas();
+}
+
+function removeSelectedChord() {
+    if (selectedCharIndex === null) return;
+    const textarea = document.getElementById("editor-textarea");
+    let text = textarea.value;
+
+    // Check backwards from selected index for an opening bracket `[`
+    let bracketStart = text.lastIndexOf("[", selectedCharIndex);
+    let bracketEnd = text.indexOf("]", selectedCharIndex);
+
+    if (bracketStart !== -1 && bracketEnd !== -1 && bracketEnd - bracketStart < 10 && bracketEnd >= selectedCharIndex - 2) {
+        text = text.slice(0, bracketStart) + text.slice(bracketEnd + 1);
+        textarea.value = text;
+        renderVisualChordCanvas();
+    } else {
+        alert("No adjacent chord bracket found near selected position.");
+    }
+}
+
 function transposeGlobal(amount) {
     globalSemitones += amount;
     const el = document.getElementById("trans-val");
@@ -839,16 +1050,12 @@ function isSongPartHeading(line) {
     return patterns.some(pattern => pattern.test(text)) ? text.toUpperCase() : null;
 }
 
-function isChordToken(token) {
-    return /^[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?$/.test(token);
-}
-
 function isPureChordLine(line) {
     const tokens = line.trim().split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return false;
     return tokens.every(token => {
         const cleaned = token.replace(/^[|]+|[|]+$/g, "");
-        return cleaned === "" || isChordToken(cleaned);
+        return cleaned === "" || /^[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?$/.test(cleaned);
     });
 }
 
@@ -1091,6 +1298,7 @@ function openAddSongModal() {
     activeEditingKey = null;
     document.getElementById("edit-song-title-label").textContent = "Add New Song";
     document.getElementById("editor-textarea").value = "[Untitled Song]\n\n[Intro]\nC   G\n\n[Verse 1]\nC   G\nLyrics here...";
+    switchEditMode('lyrics');
     switchView("edit");
 }
 
@@ -1098,6 +1306,7 @@ function openEditSongDirect(title) {
     activeEditingKey = title;
     document.getElementById("edit-song-title-label").textContent = "Edit: " + title;
     document.getElementById("editor-textarea").value = `[${title}]\n\n` + (songsDatabase[title] || "");
+    switchEditMode('lyrics');
     switchView("edit");
 }
 
@@ -1106,6 +1315,7 @@ function openEditorFromPlay() {
 }
 
 async function saveSongFromEditor() {
+    // Ensure we sync any state back to textarea if needed
     const text = document.getElementById("editor-textarea").value.trim();
     if (!text) return alert("Please enter song content.");
     if (!window.fbDB) return alert("Firebase is not connected.");
