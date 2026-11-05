@@ -309,20 +309,32 @@ header {
     gap: 6px;
 }
 
+/* Centered Layout for Editor Workspace */
+.editor-workspace {
+    display: flex;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    justify-content: center;
+}
+
 .editor-textarea {
     flex: 1;
+    max-width: 800px;
     width: 100%;
     background: transparent;
     color: var(--text-main);
     border: none;
-    padding: 16px;
+    padding: 16px 20px;
     font-family: monospace;
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: 1.1rem;
+    line-height: 1.8;
     resize: none;
     outline: none;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
+    text-align: center;
 }
 
 /* Play View Workspace */
@@ -332,10 +344,12 @@ header {
     position: relative;
     overflow: hidden;
     min-height: 0;
+    justify-content: center;
 }
 
 .output-box {
     flex: 1;
+    max-width: 800px;
     padding: 16px 20px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -502,7 +516,7 @@ header {
         min-height: 36px;
         font-size: 0.65rem;
     }
-    .output-box {
+    .output-box, .editor-textarea {
         font-size: 1rem;
         padding: 10px;
     }
@@ -562,7 +576,9 @@ header {
                     <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
                 </div>
             </div>
-            <textarea id="editor-textarea" class="editor-textarea" placeholder="[Intro]..."></textarea>
+            <div class="editor-workspace">
+                <textarea id="editor-textarea" class="editor-textarea" placeholder="[Intro]..."></textarea>
+            </div>
         </div>
     </div>
 
@@ -1177,7 +1193,7 @@ function renderNewLineUpForm() {
 
 async function saveNewLineUpFromForm() {
     const wlName = document.getElementById("new-wl-name").value.trim();
-    if (!wlName) return alert("Please input Worship Leader Name.");
+    if (!wlName) return alert("Please input Worship Leader Name Name.");
 
     const tempLineup = {};
     categories.forEach((cat, index) => {
