@@ -54,6 +54,9 @@ try {
     --chord: #4ade80;
     --section: #38bdf8;
     --highlight: #facc15;
+
+    /* Saved song text size */
+    --song-font-size: 16px;
 }
 
 * {
@@ -311,14 +314,12 @@ header {
     overflow-y: auto;
     overflow-x: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 1.1rem;
+    font-size: var(--song-font-size);
     line-height: 1.8;
     scroll-behavior: smooth;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
     text-align: center;
-
-    /* Preserve original text layout */
     white-space: pre-wrap;
     overflow-wrap: break-word;
 }
@@ -340,7 +341,7 @@ header {
     outline: none;
     resize: none;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 1.1rem;
+    font-size: var(--song-font-size);
     line-height: 1.8;
     text-align: center;
     white-space: pre-wrap;
@@ -406,12 +407,10 @@ header {
     .jumper-chip { width: 62px; min-height: 36px; font-size: 0.65rem; }
 
     .output-box {
-        font-size: 1rem;
         padding: 16px 10px;
     }
 
     #editor-textarea {
-        font-size: 1rem;
         padding: 16px 10px;
     }
 }
@@ -471,9 +470,26 @@ header {
         <div class="full-screen-container">
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromSongEditor()">⬅ Back</button>
-                <span id="song-editor-heading" style="font-weight:bold;color:var(--accent);">Add Song Lyrics</span>
-                <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
+
+                <span id="song-editor-heading"
+                      style="font-weight:bold;color:var(--accent);">
+                    Add Song Lyrics
+                </span>
+
+                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                    <button class="btn btn-sm" onclick="changeEditorZoom(-2)">−</button>
+
+                    <span id="editor-zoom-label"
+                          style="font-size:0.68rem;color:var(--text-muted);min-width:34px;text-align:center;">
+                        16px
+                    </span>
+
+                    <button class="btn btn-sm" onclick="changeEditorZoom(2)">+</button>
+
+                    <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
+                </div>
             </div>
+
             <div class="editor-workspace">
                 <textarea id="editor-textarea"
                     placeholder="Type or paste lyrics and chords here..."></textarea>
@@ -614,9 +630,19 @@ let songKeys = {};
 let songTitles = {};
 let setLists = [];
 
+/* SONG ZOOM SETTINGS */
+
+let songZoomLevels = {};
+let currentSongFontSize = 16;
+
+const DEFAULT_SONG_FONT_SIZE = 16;
+const MIN_SONG_FONT_SIZE = 10;
+const MAX_SONG_FONT_SIZE = 40;
+const SONG_FONT_SIZE_STEP = 2;
+
 let globalSemitones = 0;
 let activeEditingKey = null;
-let currentPlayingSong = { title: "", content: "" };
+let currentPlayingSong = { title: "", content: "", fontSize: 16 };
 let activeCategoryToAssign = null;
 let viewHistory = ["home"];
 let pendingSetListIndex = null;
@@ -668,6 +694,22 @@ function initializeFirebase() {
         }).catch(console.error);
     });
 
+    /* LOAD SAVED FONT SIZES */
+
+    window.fbOnValue(window.fbRef(window.fbDB, "worship_song_zoom"), snapshot => {
+        songZoomLevels = snapshot.val() || {};
+
+        if (currentPlayingSong.title) {
+            const savedSize = getSongFontSize(currentPlayingSong.title);
+
+            currentPlayingSong.fontSize = savedSize;
+
+            if (viewHistory[viewHistory.length - 1] !== "song-editor") {
+                applySongFontSize(savedSize);
+            }
+        }
+    });
+
     window.fbOnValue(window.fbRef(window.fbDB, "worship_setlists"), snapshot => {
         const data = snapshot.val();
 
@@ -709,6 +751,51 @@ function safeKey(title) {
 
 function getSongKey(title) {
     return songKeys[title] || safeKey(title);
+}
+
+/* SONG ZOOM FUNCTIONS */
+
+function clampSongFontSize(size) {
+    return Math.max(
+        MIN_SONG_FONT_SIZE,
+        Math.min(MAX_SONG_FONT_SIZE, Number(size) || DEFAULT_SONG_FONT_SIZE)
+    );
+}
+
+function getSongFontSize(title) {
+    if (!title) return DEFAULT_SONG_FONT_SIZE;
+
+    const key = getSongKey(title);
+    const savedSize = Number(songZoomLevels[key]);
+
+    if (!Number.isFinite(savedSize) || savedSize <= 0) {
+        return DEFAULT_SONG_FONT_SIZE;
+    }
+
+    return clampSongFontSize(savedSize);
+}
+
+function applySongFontSize(size) {
+    currentSongFontSize = clampSongFontSize(size);
+
+    document.documentElement.style.setProperty(
+        "--song-font-size",
+        currentSongFontSize + "px"
+    );
+
+    const label = document.getElementById("editor-zoom-label");
+
+    if (label) {
+        label.textContent = currentSongFontSize + "px";
+    }
+}
+
+function changeEditorZoom(amount) {
+    applySongFontSize(currentSongFontSize + amount);
+
+    if (currentPlayingSong.title) {
+        currentPlayingSong.fontSize = currentSongFontSize;
+    }
 }
 
 /* VIEW SWITCHING */
@@ -820,6 +907,9 @@ function confirmAddSongTitle() {
     isNewSongDraft = true;
     activeEditingKey = null;
 
+    currentSongFontSize = DEFAULT_SONG_FONT_SIZE;
+    applySongFontSize(DEFAULT_SONG_FONT_SIZE);
+
     document.getElementById("editor-textarea").value = "";
     document.getElementById("song-editor-heading").textContent =
         "Add Song Lyrics";
@@ -841,23 +931,11 @@ function transposeGlobal(amount) {
 
     /*
        Original text is displayed unchanged.
-       Transpose no longer modifies saved or displayed lyrics.
+       Transpose does not modify saved or displayed lyrics.
     */
 }
 
 /* ORIGINAL TEXT DISPLAY */
-
-/*
-   The app no longer interprets pasted lyrics.
-
-   No chord detection.
-   No section detection.
-   No moving chord positions.
-   No automatic formatting.
-   No removing lines before section headings.
-
-   The saved text is displayed directly.
-*/
 
 function renderSongContent(box, jumper, isPlayMode) {
     if (!box) return;
@@ -867,6 +945,11 @@ function renderSongContent(box, jumper, isPlayMode) {
     if (jumper) {
         jumper.innerHTML = "";
     }
+
+    applySongFontSize(
+        currentPlayingSong.fontSize ||
+        getSongFontSize(currentPlayingSong.title)
+    );
 
     box.textContent = currentPlayingSong.content || "";
 
@@ -1055,7 +1138,8 @@ function playLineUpSongAt(index) {
 
     currentPlayingSong = {
         title: title,
-        content: songsDatabase[title]
+        content: songsDatabase[title],
+        fontSize: getSongFontSize(title)
     };
 
     document.getElementById("play-song-title").textContent =
@@ -1126,8 +1210,11 @@ function openEditSongDirect(title) {
 
     currentPlayingSong = {
         title: title,
-        content: songsDatabase[title] || ""
+        content: songsDatabase[title] || "",
+        fontSize: getSongFontSize(title)
     };
+
+    applySongFontSize(currentPlayingSong.fontSize);
 
     document.getElementById("edit-song-title-label").textContent = title;
 
@@ -1143,6 +1230,9 @@ function openFullEditor() {
     activeEditingKey = currentPlayingSong.title;
     isNewSongDraft = false;
     newSongTitle = "";
+
+    currentSongFontSize = getSongFontSize(currentPlayingSong.title);
+    applySongFontSize(currentSongFontSize);
 
     document.getElementById("song-editor-heading").textContent =
         "Edit Song Lyrics";
@@ -1162,6 +1252,9 @@ function openPlayToEdit() {
     isNewSongDraft = false;
     newSongTitle = "";
 
+    currentSongFontSize = getSongFontSize(currentPlayingSong.title);
+    applySongFontSize(currentSongFontSize);
+
     document.getElementById("song-editor-heading").textContent =
         "Edit Song Lyrics";
 
@@ -1177,10 +1270,9 @@ function openPlayToEdit() {
 
 async function saveSongFromEditor() {
 
-    // Read the complete text without trimming or modifying it.
+    // Preserve the complete text exactly as entered.
     const content = document.getElementById("editor-textarea").value;
 
-    // Check for empty content without changing the actual content.
     if (!content.trim()) {
         return alert("Please enter song lyrics.");
     }
@@ -1206,8 +1298,10 @@ async function saveSongFromEditor() {
     }
 
     const newKey = safeKey(title);
+    const fontSizeToSave = clampSongFontSize(currentSongFontSize);
 
     try {
+        // Save original lyrics without modifying their content.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_songs/" + newKey),
             content
@@ -1218,14 +1312,25 @@ async function saveSongFromEditor() {
             title
         );
 
+        // Save this song's zoom level separately.
+        await window.fbSet(
+            window.fbRef(window.fbDB, "worship_song_zoom/" + newKey),
+            fontSizeToSave
+        );
+
+        songZoomLevels[newKey] = fontSizeToSave;
+
         activeEditingKey = title;
         isNewSongDraft = false;
         newSongTitle = "";
 
         currentPlayingSong = {
             title: title,
-            content: content
+            content: content,
+            fontSize: fontSizeToSave
         };
+
+        applySongFontSize(fontSizeToSave);
 
         document.getElementById("edit-song-title-label").textContent = title;
         document.getElementById("play-song-title").textContent = title;
@@ -1264,8 +1369,15 @@ async function deleteCurrentSong() {
             window.fbRef(window.fbDB, "worship_song_titles/" + key)
         );
 
+        // Remove the associated zoom setting too.
+        await window.fbRemove(
+            window.fbRef(window.fbDB, "worship_song_zoom/" + key)
+        );
+
+        delete songZoomLevels[key];
+
         activeEditingKey = null;
-        currentPlayingSong = { title: "", content: "" };
+        currentPlayingSong = { title: "", content: "", fontSize: 16 };
 
         viewHistory = ["home"];
         switchView("home", false);
@@ -1407,7 +1519,8 @@ function playSong(title) {
 
     currentPlayingSong = {
         title: title,
-        content: songsDatabase[title]
+        content: songsDatabase[title],
+        fontSize: getSongFontSize(title)
     };
 
     document.getElementById("play-song-title").textContent = title;
@@ -1477,6 +1590,8 @@ async function confirmAddCategory() {
 document.addEventListener("DOMContentLoaded", () => {
     renderNewLineUpForm();
     renderSetList();
+
+    applySongFontSize(DEFAULT_SONG_FONT_SIZE);
 
     document.getElementById("new-song-title-input")
         .addEventListener("keydown", event => {
