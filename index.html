@@ -364,8 +364,6 @@ header {
     width: 100%;
 }
 
-/* CHORDS ABOVE THEIR LYRIC LETTERS */
-
 .lyric-text-line {
     font-size: 1.2rem;
     font-weight: 600;
@@ -484,8 +482,7 @@ header {
     <!-- HOME -->
     <div id="view-home" class="view-section active">
         <div class="home-start-container">
-            <button class="start-jam-button"
-                onclick="openDrawer('drawer-setlist')">
+            <button class="start-jam-button" onclick="openDrawer('drawer-setlist')">
                 Start Jam
             </button>
         </div>
@@ -545,8 +542,7 @@ header {
 <div id="drawer-setlist" class="drawer-overlay" onclick="closeDrawer('drawer-setlist')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
         <h3 style="color:var(--success);font-size:0.95rem;">Set List</h3>
-        <div id="setlist-container"
-            style="max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="setlist-container" style="max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
         <button class="btn" onclick="closeDrawer('drawer-setlist')">Close</button>
     </div>
 </div>
@@ -555,11 +551,9 @@ header {
 <div id="drawer-songs" class="drawer-overlay" onclick="closeDrawer('drawer-songs')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
         <h3 style="color:var(--accent);font-size:0.95rem;">Song Database</h3>
-        <input type="text" id="song-search-input" placeholder="Search song..."
-            oninput="renderSongsDatabase()"
+        <input type="text" id="song-search-input" placeholder="Search song..." oninput="renderSongsDatabase()"
             style="background:#0f172a;border:1px solid #334155;color:#fff;padding:8px;border-radius:6px;">
-        <div id="songs-db-container"
-            style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+        <div id="songs-db-container" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
         <button class="btn" onclick="closeDrawer('drawer-songs')">Close</button>
     </div>
 </div>
@@ -570,8 +564,7 @@ header {
         <h3 style="color:var(--highlight);font-size:0.95rem;">Create New Line-up</h3>
         <input type="text" id="new-wl-name" placeholder="Worship Leader Name..."
             style="background:#0f172a;border:1px solid #334155;color:#fff;padding:8px;border-radius:6px;">
-        <div id="new-lineup-selectors"
-            style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="new-lineup-selectors" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
         <div style="display:flex;gap:6px;">
             <button class="btn btn-sm" onclick="openAddCategoryModal()">+ Category</button>
             <button class="btn btn-success" style="flex:1;" onclick="saveNewLineUpFromForm()">Save</button>
@@ -584,8 +577,7 @@ header {
 <div id="select-song-modal" class="drawer-overlay" onclick="closeModal('select-song-modal')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
         <h3 style="font-size:0.95rem;">Select Song for <span id="select-modal-cat" style="color:var(--section);"></span></h3>
-        <div id="modal-songs-list"
-            style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+        <div id="modal-songs-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
         <button class="btn" onclick="closeModal('select-song-modal')">Cancel</button>
     </div>
 </div>
@@ -734,17 +726,31 @@ function getSongKey(title) {
     return songKeys[title] || safeKey(title);
 }
 
-function switchView(viewName, pushHistory = true) {
-    document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
+/* FIXED VIEW SWITCHING */
 
-    const target = document.getElementById("view-" + viewName);
-    if (target) target.classList.add("active");
+function switchView(viewName, pushHistory = true) {
+    const normalizedName = viewName.startsWith("view-")
+        ? viewName.substring(5)
+        : viewName;
+
+    document.querySelectorAll(".view-section").forEach(el =>
+        el.classList.remove("active")
+    );
+
+    const target = document.getElementById("view-" + normalizedName);
+
+    if (target) {
+        target.classList.add("active");
+    } else {
+        console.error("View not found:", "view-" + normalizedName);
+        return;
+    }
 
     if (pushHistory) {
         const currentTop = viewHistory[viewHistory.length - 1];
 
-        if (currentTop !== viewName) {
-            viewHistory.push(viewName);
+        if (currentTop !== normalizedName) {
+            viewHistory.push(normalizedName);
         }
     }
 }
@@ -762,7 +768,9 @@ function goBackFromEdit() { goBack(); }
 function goBackFromPlay() { goBack(); }
 
 function openDrawer(drawerId) {
-    document.querySelectorAll(".drawer-overlay").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".drawer-overlay").forEach(el =>
+        el.style.display = "none"
+    );
 
     const drawer = document.getElementById(drawerId);
     if (drawer) drawer.style.display = "flex";
@@ -868,14 +876,6 @@ function isPureChordLine(line) {
         return cleaned === "" || isChordToken(cleaned);
     });
 }
-
-/*
-   Inline chord format:
-   [C]Amazing [G]grace how [F]sweet
-
-   Each chord is displayed ABOVE the first lyric character
-   following its marker, using green font.
-*/
 
 function renderInlineChords(line) {
     const regex = /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g;
@@ -1062,7 +1062,7 @@ function jumpToBlock(id) {
     });
 }
 
-/* SET LIST: SORT BY DATE, THEN WORSHIP LEADER */
+/* SET LIST */
 
 function getSetListDate(sl) {
     return sl.createdAt || sl.dateCreated || sl.timestamp || 0;
@@ -1166,8 +1166,6 @@ function renderSetList() {
         container.appendChild(row);
     });
 }
-
-/* CONFIRMATION: OK LOADS, BACK RETURNS TO SET LIST */
 
 function confirmLoadSetList() {
     if (pendingSetListIndex === null) return;
