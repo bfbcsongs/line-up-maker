@@ -574,7 +574,7 @@ header {
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromPlay()">⬅ Back</button>
                 <span id="play-song-title" style="font-weight:bold; color:var(--section);">Song Title</span>
-                <button class="btn btn-sm btn-primary" onclick="openEditorFromPlay()">Edit</button>
+                <button class="btn btn-sm btn-primary" onclick="openPlayToEdit()">Edit</button>
             </div>
             <div class="play-workspace">
                 <div id="play-lyrics-box" class="output-box"></div>
@@ -1064,6 +1064,9 @@ function renderSetList() {
         name.style.cssText = "font-size:0.85rem;font-weight:bold;color:var(--success);flex:1;";
         name.textContent = (index + 1) + ". " + (sl.worshipLeader || "Unnamed");
 
+        const btnGroup = document.createElement("div");
+        btnGroup.style.cssText = "display:flex; gap:4px;";
+
         const load = document.createElement("button");
         load.className = "btn btn-sm btn-primary";
         load.textContent = "Load";
@@ -1071,7 +1074,25 @@ function renderSetList() {
             loadSetListToActive(index);
             closeDrawer("drawer-setlist");
         };
-        row.append(name, load);
+
+        const del = document.createElement("button");
+        del.className = "btn btn-sm btn-danger";
+        del.textContent = "Delete";
+        del.onclick = async () => {
+            const wlTitle = sl.worshipLeader || `Set List #${index + 1}`;
+            if (!confirm(`Are you sure you want to delete the set list for "${wlTitle}"?`)) return;
+
+            try {
+                setLists.splice(index, 1);
+                await window.fbSet(window.fbRef(window.fbDB, "worship_setlists"), setLists);
+                renderSetList();
+            } catch (e) {
+                alert("Error deleting set list: " + e.message);
+            }
+        };
+
+        btnGroup.append(load, del);
+        row.append(name, btnGroup);
         container.appendChild(row);
     });
 }
@@ -1182,9 +1203,8 @@ function openAddSongModal() {
 
 function openEditSongDirect(title) {
     activeEditingKey = title;
-    currentPlayingSong = { title: title, content: songsDatabase[title] };
+    currentPlayingSong = { title: title, content: songsDatabase[title] || "" };
     document.getElementById("edit-song-title-label").textContent = title;
-    document.getElementById("editor-textarea").value = `[${title}]\n\n` + (songsDatabase[title] || "");
     renderEditScreen();
     switchView("view-edit");
 }
@@ -1197,6 +1217,10 @@ function openFullEditor() {
 }
 
 function openEditorFromPlay() {
+    if (currentPlayingSong.title) openEditSongDirect(currentPlayingSong.title);
+}
+
+function openPlayToEdit() {
     if (currentPlayingSong.title) openEditSongDirect(currentPlayingSong.title);
 }
 
