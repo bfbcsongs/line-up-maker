@@ -677,7 +677,7 @@ header {
                 <div id="chord-canvas-box" class="chord-canvas-box"></div>
                 <div class="chord-popup-bar">
                     <div style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-                        <span>Tap any letter above to assign/change chord:</span>
+                        <span>Tap any letter to place chord above its word:</span>
                         <button class="btn btn-sm btn-danger" onclick="removeSelectedChord()" style="padding:2px 6px;">Remove Chord</button>
                     </div>
                     <div id="chord-palette" class="chord-palette"></div>
@@ -929,13 +929,11 @@ function switchEditMode(mode) {
     const tabChords = document.getElementById("tab-btn-chords");
 
     if (mode === 'lyrics') {
-        // If switching back from chords, ensure textarea has latest content
         chordEditor.style.display = "none";
         textarea.style.display = "block";
         tabLyrics.classList.add("active");
         tabChords.classList.remove("active");
     } else {
-        // Switching to visual chords mode
         textarea.style.display = "none";
         chordEditor.style.display = "flex";
         tabChords.classList.add("active");
@@ -981,14 +979,20 @@ function renderVisualChordCanvas() {
 
 function assignChordToSelected(chordName) {
     if (selectedCharIndex === null) {
-        alert("Please tap a specific letter/character first.");
+        alert("Please tap a specific letter first.");
         return;
     }
     const textarea = document.getElementById("editor-textarea");
     let text = textarea.value;
 
-    // Insert [ChordName] right before the selected character index
-    text = text.slice(0, selectedCharIndex) + `[${chordName}]` + text.slice(selectedCharIndex);
+    // Find the start of the current word containing the selected character
+    let startIdx = selectedCharIndex;
+    while (startIdx > 0 && !/\s/.test(text[startIdx - 1]) && text[startIdx - 1] !== '\n') {
+        startIdx--;
+    }
+
+    // Insert [ChordName] right before the beginning of the word
+    text = text.slice(0, startIdx) + `[${chordName}]` + text.slice(startIdx);
     textarea.value = text;
     renderVisualChordCanvas();
 }
@@ -998,16 +1002,15 @@ function removeSelectedChord() {
     const textarea = document.getElementById("editor-textarea");
     let text = textarea.value;
 
-    // Check backwards from selected index for an opening bracket `[`
     let bracketStart = text.lastIndexOf("[", selectedCharIndex);
     let bracketEnd = text.indexOf("]", selectedCharIndex);
 
-    if (bracketStart !== -1 && bracketEnd !== -1 && bracketEnd - bracketStart < 10 && bracketEnd >= selectedCharIndex - 2) {
+    if (bracketStart !== -1 && bracketEnd !== -1 && bracketEnd - bracketStart < 10 && bracketEnd >= selectedCharIndex - 5) {
         text = text.slice(0, bracketStart) + text.slice(bracketEnd + 1);
         textarea.value = text;
         renderVisualChordCanvas();
     } else {
-        alert("No adjacent chord bracket found near selected position.");
+        alert("No adjacent chord bracket found near selected word.");
     }
 }
 
@@ -1315,7 +1318,6 @@ function openEditorFromPlay() {
 }
 
 async function saveSongFromEditor() {
-    // Ensure we sync any state back to textarea if needed
     const text = document.getElementById("editor-textarea").value.trim();
     if (!text) return alert("Please enter song content.");
     if (!window.fbDB) return alert("Firebase is not connected.");
