@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,9 +57,8 @@ try {
     --section: #38bdf8;
     --highlight: #facc15;
 
-    /* Fixed song character-cell width */
     --song-font-size: 16px;
-    --song-cell-width: 9.64px;
+    --song-columns: 80;
 }
 
 * {
@@ -162,8 +162,7 @@ header {
 
 .view-section {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: none;
@@ -354,27 +353,19 @@ header {
     padding: 14px 12px 40px;
 }
 
-/*
-   THE FIXED SONG SHEET
-
-   The sheet uses monospace character cells.
-   It does not scale to the phone width.
-   It scrolls horizontally instead.
-*/
 .song-sheet {
     display: block;
     width: max-content;
-    min-width: 80ch;
+    min-width: calc(var(--song-columns) * 1ch);
     font-family: "Courier New", Courier, monospace;
     font-size: var(--song-font-size);
     line-height: 1.35;
-    white-space: pre;
 }
 
 .song-part-block {
     display: block;
     width: max-content;
-    min-width: 80ch;
+    min-width: calc(var(--song-columns) * 1ch);
     padding: 10px;
     margin: 0 0 14px 0;
     border: 1px solid transparent;
@@ -391,7 +382,7 @@ header {
 .song-part-title-wrapper {
     display: block;
     width: max-content;
-    min-width: 80ch;
+    min-width: calc(var(--song-columns) * 1ch);
     text-align: left;
     margin-bottom: 5px;
 }
@@ -407,47 +398,54 @@ header {
 .song-part-content {
     display: block;
     width: max-content;
-    min-width: 80ch;
-    white-space: pre;
+    min-width: calc(var(--song-columns) * 1ch);
 }
 
-/* One fixed character-position row */
+/*
+  Every visual row has a fixed character width.
+  Long lyrics wrap at word boundaries.
+  Chords are rendered on the same visual row as their
+  original character position.
+*/
 .song-fixed-line {
     position: relative;
     display: block;
-    width: max-content;
-    min-width: 80ch;
+    width: calc(var(--song-columns) * 1ch);
     min-height: 2.75em;
-    height: 2.75em;
     font-family: "Courier New", Courier, monospace;
     font-size: var(--song-font-size);
     line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.song-visual-row {
+    position: relative;
+    width: calc(var(--song-columns) * 1ch);
+    height: 2.75em;
+    min-height: 2.75em;
     white-space: pre;
 }
 
-/* Chords occupy the upper layer */
 .song-chord-layer {
     position: absolute;
     top: 0;
     left: 0;
     height: 1.2em;
-    min-width: 80ch;
-    width: max-content;
+    width: 100%;
     white-space: pre;
-    z-index: 2;
+    z-index: 3;
 }
 
-/* Lyrics occupy the lower layer */
 .song-lyric-layer {
     position: absolute;
     top: 1.3em;
     left: 0;
     height: 1.25em;
-    min-width: 80ch;
-    width: max-content;
+    width: 100%;
     white-space: pre;
     color: var(--text-main);
     z-index: 1;
+    outline: none;
 }
 
 .song-chord {
@@ -462,17 +460,23 @@ header {
     line-height: 1.2;
     padding: 0;
     margin: 0;
+    touch-action: none;
 }
 
 .song-chord-button {
     background: transparent;
     border: none;
-    cursor: pointer;
+    cursor: grab;
     text-align: left;
 }
 
 .song-chord-button:active {
     color: var(--highlight);
+}
+
+.song-chord-button.selected-chord {
+    color: var(--highlight);
+    text-decoration: underline;
 }
 
 .song-line-editable .song-chord-layer {
@@ -498,7 +502,7 @@ header {
 
 .song-line-delete {
     position: absolute;
-    left: calc(80ch + 12px);
+    left: calc(var(--song-columns) * 1ch + 12px);
     top: 6px;
     font-family: sans-serif;
     font-size: 11px;
@@ -509,6 +513,48 @@ header {
     padding: 3px 6px;
     cursor: pointer;
     opacity: 0.85;
+}
+
+.chord-inline-input {
+    position: absolute;
+    top: -3px;
+    z-index: 10;
+    width: 65px;
+    min-width: 50px;
+    max-width: 90px;
+    height: 24px;
+    background: #0f172a;
+    border: 1px solid var(--highlight);
+    border-radius: 4px;
+    color: var(--chord);
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 4px;
+    outline: none;
+}
+
+.chord-selection-tools {
+    position: sticky;
+    left: 0;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 0;
+    z-index: 20;
+}
+
+.chord-selection-tools button {
+    border: 1px solid #475569;
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #fff;
+    background: #273548;
+}
+
+.chord-selection-tools .remove-selected-chord {
+    background: #7f1d1d;
 }
 
 .song-part-add-hint {
@@ -580,8 +626,6 @@ header {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
     transition: background 0.2s, border-color 0.2s;
 }
@@ -699,7 +743,7 @@ header {
             </div>
 
             <div class="editor-instruction">
-                Tap above a lyric to place a chord. Tap a chord to edit/remove it. Tap lyrics to edit words. Swipe sideways to view the full song.
+                Tap the chord row to add a chord. Drag a chord to move it. Select a chord to remove it. Tap lyrics to edit them. Long lyrics wrap to the next row.
             </div>
 
             <div id="editor-song-viewport" class="song-sheet-viewport">
@@ -818,9 +862,11 @@ let currentPlayingSong = { title: "", content: "" };
 let activeCategoryToAssign = null;
 let viewHistory = ["home"];
 
-/* Editor keeps the legacy song text format */
 let editorLines = [];
+let selectedChord = null;
+let dragState = null;
 
+const SONG_COLUMNS = 80;
 const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 let firebaseInitialized = false;
 
@@ -1011,7 +1057,6 @@ function transposeNote(chord, semitones) {
             .replace("Bb", "A#");
 
         let index = notesSharp.indexOf(normalized);
-
         if (index === -1) return note;
 
         index = (index + semitones) % 12;
@@ -1072,7 +1117,7 @@ function isChordToken(token) {
 }
 
 /* -----------------------------------------
-   FIXED TABLE SONG PARSER
+   SONG PARSER
 ----------------------------------------- */
 
 function parseSongLine(line) {
@@ -1085,10 +1130,6 @@ function parseSongLine(line) {
 
     if (!line) return result;
 
-    /*
-       Detect traditional chord-only rows:
-       C       G       Am
-    */
     const tokens = [...line.matchAll(/[^ \t|]+/g)];
 
     if (tokens.length > 0) {
@@ -1118,10 +1159,6 @@ function parseSongLine(line) {
         }
     }
 
-    /*
-       Parse inline notation:
-       [G]Amazing grace how [C]sweet the sound
-    */
     const regex = /\[([^\]]+)\]/g;
     let lastIndex = 0;
     let match;
@@ -1146,7 +1183,6 @@ function parseSongLine(line) {
     return result;
 }
 
-/* Convert editor row back to Firebase-compatible text */
 function serializeSongLine(line) {
     const parsed = typeof line === "string"
         ? parseSongLine(line)
@@ -1192,159 +1228,450 @@ function serializeSongLine(line) {
 }
 
 /* -----------------------------------------
-   FIXED CHARACTER WIDTH MEASUREMENT
+   WORD-BOUNDARY WRAPPING
 ----------------------------------------- */
 
-function getSongCharacterWidth(element) {
+/*
+  This function breaks lyrics into visual rows.
+
+  It keeps the original character positions.
+  Chords are mapped to the visual row containing
+  their original position.
+*/
+function wrapLyrics(text, maxColumns = SONG_COLUMNS) {
+    const rows = [];
+
+    if (!text.length) {
+        return [{ start: 0, text: "" }];
+    }
+
+    let start = 0;
+
+    while (start < text.length) {
+        let end = Math.min(start + maxColumns, text.length);
+
+        if (end < text.length) {
+            const lastSpace = text.lastIndexOf(" ", end);
+
+            if (lastSpace > start) {
+                end = lastSpace;
+            }
+        }
+
+        if (end <= start) {
+            end = Math.min(start + maxColumns, text.length);
+        }
+
+        rows.push({
+            start: start,
+            text: text.slice(start, end)
+        });
+
+        start = end;
+
+        while (text[start] === " ") {
+            start++;
+        }
+    }
+
+    return rows;
+}
+
+function getVisualPosition(position, rows) {
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const nextStart = i + 1 < rows.length
+            ? rows[i + 1].start
+            : Infinity;
+
+        if (position >= row.start && position < nextStart) {
+            return {
+                rowIndex: i,
+                column: position - row.start
+            };
+        }
+    }
+
+    const last = rows[rows.length - 1];
+
+    return {
+        rowIndex: rows.length - 1,
+        column: Math.max(0, position - last.start)
+    };
+}
+
+function getCharacterWidth(element) {
     const style = getComputedStyle(element);
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
     context.font = style.font;
 
-    const measured = context.measureText("0").width;
+    return context.measureText("0").width || 9.64;
+}
 
-    return measured || 9.64;
+/* -----------------------------------------
+   INLINE CHORD EDITING
+----------------------------------------- */
+
+function openInlineChordInput(layer, lineIndex, position, existingChord = null, chordIndex = -1) {
+    const previous = layer.querySelector(".chord-inline-input");
+    if (previous) previous.remove();
+
+    const input = document.createElement("input");
+    input.className = "chord-inline-input";
+    input.type = "text";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.placeholder = "Chord";
+    input.value = existingChord || "";
+
+    input.style.left = `calc(${position} * 1ch)`;
+
+    layer.appendChild(input);
+
+    input.focus();
+    input.select();
+
+    function finish(save) {
+        if (!input.isConnected) return;
+
+        const value = input.value.trim();
+
+        if (save && value) {
+            if (!isChordToken(value)) {
+                alert("Invalid chord name.");
+                input.focus();
+                return;
+            }
+
+            const parsed = parseSongLine(editorLines[lineIndex]);
+
+            if (chordIndex >= 0 && parsed.chords[chordIndex]) {
+                parsed.chords[chordIndex].chord = value;
+            } else {
+                parsed.chords.push({
+                    pos: position,
+                    chord: value
+                });
+            }
+
+            parsed.chordOnly = false;
+            parsed.chords.sort((a, b) => a.pos - b.pos);
+
+            editorLines[lineIndex] = serializeSongLine(parsed);
+            renderEditor();
+        } else if (save && !value && chordIndex >= 0) {
+            const parsed = parseSongLine(editorLines[lineIndex]);
+            parsed.chords.splice(chordIndex, 1);
+            editorLines[lineIndex] = serializeSongLine(parsed);
+            renderEditor();
+        } else {
+            input.remove();
+        }
+    }
+
+    input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            finish(true);
+        }
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            finish(false);
+        }
+
+        if (event.key === "Delete" && chordIndex >= 0) {
+            event.preventDefault();
+            finish(true);
+        }
+    });
+
+    input.addEventListener("blur", () => {
+        setTimeout(() => {
+            if (input.isConnected) finish(true);
+        }, 120);
+    });
+}
+
+function selectChord(lineIndex, chordIndex, chordElement) {
+    document.querySelectorAll(".selected-chord").forEach(el => {
+        el.classList.remove("selected-chord");
+    });
+
+    chordElement.classList.add("selected-chord");
+
+    selectedChord = {
+        lineIndex,
+        chordIndex
+    };
+
+    const oldTools = document.querySelector(".chord-selection-tools");
+    if (oldTools) oldTools.remove();
+
+    const tools = document.createElement("div");
+    tools.className = "chord-selection-tools";
+
+    const edit = document.createElement("button");
+    edit.textContent = "Edit chord";
+    edit.onclick = () => {
+        const row = chordElement.closest(".song-visual-row");
+        const layer = row.querySelector(".song-chord-layer");
+        const parsed = parseSongLine(editorLines[lineIndex]);
+        const chord = parsed.chords[chordIndex];
+
+        if (!chord) return;
+
+        const wrapped = wrapLyrics(parsed.text);
+        const visual = getVisualPosition(chord.pos, wrapped);
+
+        openInlineChordInput(
+            layer,
+            lineIndex,
+            visual.column,
+            chord.chord,
+            chordIndex
+        );
+    };
+
+    const remove = document.createElement("button");
+    remove.className = "remove-selected-chord";
+    remove.textContent = "Remove chord";
+    remove.onclick = () => {
+        const parsed = parseSongLine(editorLines[lineIndex]);
+
+        parsed.chords.splice(chordIndex, 1);
+
+        editorLines[lineIndex] = serializeSongLine(parsed);
+        selectedChord = null;
+        renderEditor();
+    };
+
+    tools.append(edit, remove);
+
+    const viewport = document.getElementById("editor-song-viewport");
+    viewport.insertBefore(tools, viewport.firstChild);
+}
+
+/* -----------------------------------------
+   DRAG CHORDS
+----------------------------------------- */
+
+function enableChordDragging(chord, lineIndex, chordIndex, visualRowStart) {
+    let startX = 0;
+    let moved = false;
+
+    chord.addEventListener("pointerdown", event => {
+        startX = event.clientX;
+        moved = false;
+
+        dragState = {
+            lineIndex,
+            chordIndex,
+            startX,
+            visualRowStart
+        };
+
+        chord.setPointerCapture(event.pointerId);
+    });
+
+    chord.addEventListener("pointermove", event => {
+        if (!dragState) return;
+
+        if (Math.abs(event.clientX - startX) > 5) {
+            moved = true;
+        }
+    });
+
+    chord.addEventListener("pointerup", event => {
+        if (!dragState) return;
+
+        if (moved) {
+            const parsed = parseSongLine(editorLines[lineIndex]);
+            const item = parsed.chords[chordIndex];
+
+            if (item) {
+                const width = getCharacterWidth(chord);
+                const difference = Math.round((event.clientX - startX) / width);
+
+                const newPosition = Math.max(
+                    0,
+                    item.pos + difference
+                );
+
+                item.pos = newPosition;
+                parsed.chords.sort((a, b) => a.pos - b.pos);
+
+                editorLines[lineIndex] = serializeSongLine(parsed);
+                renderEditor();
+            }
+        }
+
+        dragState = null;
+    });
+
+    chord.addEventListener("pointercancel", () => {
+        dragState = null;
+    });
 }
 
 /* -----------------------------------------
    SHARED SONG LINE RENDERER
-   Used by BOTH EDIT and PLAY.
 ----------------------------------------- */
 
 function createSongLine(rawLine, editable = false, lineIndex = -1) {
     const parsed = parseSongLine(rawLine);
 
-    const row = document.createElement("div");
-    row.className = "song-fixed-line" +
+    const container = document.createElement("div");
+    container.className = "song-fixed-line" +
         (editable ? " song-line-editable" : "");
 
-    if (editable) {
-        row.dataset.lineIndex = lineIndex;
-    }
+    const text = parsed.chordOnly ? "" : parsed.text;
+    const wrappedRows = wrapLyrics(text);
 
-    const chordLayer = document.createElement("div");
-    chordLayer.className = "song-chord-layer";
+    wrappedRows.forEach((visualRow, visualIndex) => {
+        const row = document.createElement("div");
+        row.className = "song-visual-row";
 
-    const lyricLayer = document.createElement("div");
-    lyricLayer.className = "song-lyric-layer";
+        const chordLayer = document.createElement("div");
+        chordLayer.className = "song-chord-layer";
 
-    if (parsed.chordOnly) {
-        lyricLayer.textContent = "";
-    } else {
-        lyricLayer.textContent = parsed.text;
-    }
+        const lyricLayer = document.createElement("div");
+        lyricLayer.className = "song-lyric-layer";
 
-    parsed.chords.forEach((item, chordIndex) => {
-        const chord = editable
-            ? document.createElement("button")
-            : document.createElement("span");
+        lyricLayer.textContent = visualRow.text;
 
-        chord.className = editable
-            ? "song-chord song-chord-button"
-            : "song-chord";
+        parsed.chords.forEach((item, chordIndex) => {
+            const visual = getVisualPosition(item.pos, wrappedRows);
 
-        chord.style.left = item.pos + "ch";
-        chord.textContent = transposeNote(item.chord, globalSemitones);
+            if (visual.rowIndex !== visualIndex) return;
 
-        if (editable) {
-            chord.type = "button";
-            chord.title = "Tap to edit or remove chord";
+            const chord = editable
+                ? document.createElement("button")
+                : document.createElement("span");
 
-            chord.onclick = event => {
-                event.stopPropagation();
+            chord.className = editable
+                ? "song-chord song-chord-button"
+                : "song-chord";
 
-                const replacement = prompt(
-                    "Enter chord. Leave empty to remove:",
-                    item.chord
+            chord.style.left = `${visual.column}ch`;
+            chord.textContent = transposeNote(item.chord, globalSemitones);
+
+            if (editable) {
+                chord.type = "button";
+                chord.title = "Select or drag chord";
+
+                chord.onclick = event => {
+                    event.stopPropagation();
+
+                    if (chord.dataset.dragged === "true") {
+                        chord.dataset.dragged = "false";
+                        return;
+                    }
+
+                    selectChord(lineIndex, chordIndex, chord);
+                };
+
+                enableChordDragging(
+                    chord,
+                    lineIndex,
+                    chordIndex,
+                    visualRow.start
                 );
 
-                if (replacement === null) return;
-
-                const newChord = replacement.trim();
-
-                if (newChord && !isChordToken(newChord)) {
-                    alert("Invalid chord name.");
-                    return;
-                }
-
-                const updated = parseSongLine(editorLines[lineIndex]);
-
-                if (newChord) {
-                    updated.chords[chordIndex].chord = newChord;
-                } else {
-                    updated.chords.splice(chordIndex, 1);
-                }
-
-                editorLines[lineIndex] = serializeSongLine(updated);
-                renderEditor();
-            };
-        }
-
-        chordLayer.appendChild(chord);
-    });
-
-    if (editable) {
-        chordLayer.addEventListener("click", event => {
-            if (event.target.closest(".song-chord")) return;
-
-            const width = getSongCharacterWidth(row);
-            const rect = row.getBoundingClientRect();
-
-            const position = Math.max(
-                0,
-                Math.round((event.clientX - rect.left) / width)
-            );
-
-            const chord = prompt("Enter chord for this position:");
-
-            if (chord === null || !chord.trim()) return;
-
-            const cleanChord = chord.trim();
-
-            if (!isChordToken(cleanChord)) {
-                alert("Invalid chord name.");
-                return;
+                chord.addEventListener("pointerup", () => {
+                    if (dragState === null) {
+                        chord.dataset.dragged = "true";
+                        setTimeout(() => {
+                            chord.dataset.dragged = "false";
+                        }, 200);
+                    }
+                });
             }
 
-            const updated = parseSongLine(editorLines[lineIndex]);
+            chordLayer.appendChild(chord);
+        });
 
-            updated.chordOnly = false;
+        if (editable) {
+            chordLayer.addEventListener("click", event => {
+                if (event.target.closest(".song-chord")) return;
 
-            updated.chords.push({
-                pos: position,
-                chord: cleanChord
+                const width = getCharacterWidth(row);
+                const rect = chordLayer.getBoundingClientRect();
+
+                const column = Math.max(
+                    0,
+                    Math.min(
+                        SONG_COLUMNS - 1,
+                        Math.round((event.clientX - rect.left) / width)
+                    )
+                );
+
+                const absolutePosition = visualRow.start + column;
+
+                openInlineChordInput(
+                    chordLayer,
+                    lineIndex,
+                    column,
+                    null,
+                    -1
+                );
+
+                const input = chordLayer.querySelector(".chord-inline-input");
+
+                if (input) {
+                    input.dataset.absolutePosition = absolutePosition;
+                }
             });
 
-            updated.chords.sort((a, b) => a.pos - b.pos);
-
-            editorLines[lineIndex] = serializeSongLine(updated);
-            renderEditor();
-        });
-
-        lyricLayer.addEventListener("click", () => {
-            const updated = parseSongLine(editorLines[lineIndex]);
-
-            const newLyrics = prompt(
-                "Edit lyric line:",
-                updated.chordOnly ? "" : updated.text
-            );
-
-            if (newLyrics === null) return;
-
-            updated.text = newLyrics;
-            updated.chordOnly = false;
-
             /*
-               Existing chord positions are retained.
-               Positions beyond the new lyric length are not silently moved.
+              Direct lyric editing.
+              Save on blur, preserving chord anchors.
             */
-            editorLines[lineIndex] = serializeSongLine(updated);
-            renderEditor();
-        });
-    }
+            lyricLayer.contentEditable = "true";
+            lyricLayer.spellcheck = false;
 
-    row.append(chordLayer, lyricLayer);
+            lyricLayer.addEventListener("keydown", event => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    lyricLayer.blur();
+                }
+            });
+
+            lyricLayer.addEventListener("blur", () => {
+                const newVisualText = lyricLayer.textContent.replace(/\n/g, "");
+
+                const current = parseSongLine(editorLines[lineIndex]);
+                const rows = wrapLyrics(current.text);
+
+                if (rows.length === 1) {
+                    current.text = newVisualText;
+                } else {
+                    /*
+                      Rebuild the full text from the edited visual row
+                      and the untouched remaining rows.
+                    */
+                    rows[visualIndex].text = newVisualText;
+
+                    current.text = rows
+                        .map(item => item.text)
+                        .join("");
+                }
+
+                current.chords = current.chords.map(chord => ({
+                    pos: Math.min(chord.pos, current.text.length),
+                    chord: chord.chord
+                }));
+
+                editorLines[lineIndex] = serializeSongLine(current);
+                renderEditor();
+            });
+        }
+
+        row.append(chordLayer, lyricLayer);
+        container.appendChild(row);
+    });
 
     if (editable) {
         const deleteButton = document.createElement("button");
@@ -1358,13 +1685,14 @@ function createSongLine(rawLine, editable = false, lineIndex = -1) {
             if (!confirm("Delete this line?")) return;
 
             editorLines.splice(lineIndex, 1);
+            selectedChord = null;
             renderEditor();
         };
 
-        row.appendChild(deleteButton);
+        container.appendChild(deleteButton);
     }
 
-    return row;
+    return container;
 }
 
 /* -----------------------------------------
@@ -1411,8 +1739,7 @@ function renderEditor() {
             return;
         }
 
-        const row = createSongLine(line, true, index);
-        sheet.appendChild(row);
+        sheet.appendChild(createSongLine(line, true, index));
     });
 
     if (editorLines.length === 0) {
@@ -1434,10 +1761,7 @@ function addEditorLine() {
 }
 
 function addEditorPart() {
-    const name = prompt(
-        "Enter song part name:",
-        "Verse 1"
-    );
+    const name = prompt("Enter song part name:", "Verse 1");
 
     if (name === null || !name.trim()) return;
 
@@ -1470,6 +1794,7 @@ function openAddSongModal() {
         "Amazing grace how sweet the sound"
     ];
 
+    selectedChord = null;
     renderEditor();
     switchView("edit");
 }
@@ -1483,6 +1808,7 @@ function openEditSongDirect(title) {
     const content = songsDatabase[title] || "";
     editorLines = content.split(/\r?\n/);
 
+    selectedChord = null;
     renderEditor();
     switchView("edit");
 }
@@ -1516,10 +1842,6 @@ async function saveSongFromEditor() {
         : safeKey(title);
 
     try {
-        /*
-           Keep the existing Firebase structure.
-           Song body remains a plain text string.
-        */
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_songs/" + newKey),
             content
@@ -1622,7 +1944,6 @@ function renderPlayScreen() {
         chip.textContent = label;
         chip.dataset.target = id;
 
-        /* Local ID closure prevents all chips targeting the last block */
         chip.onclick = () => jumpToBlock(id);
 
         jumper.appendChild(chip);
@@ -1639,10 +1960,6 @@ function renderPlayScreen() {
             return;
         }
 
-        /*
-           Retain the original behavior:
-           song content before the first recognized part heading is ignored.
-        */
         if (currentBlock) {
             currentBlock.appendChild(
                 createSongLine(line, false)
@@ -2055,11 +2372,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderNewLineUpForm();
     renderSetList();
 });
-
-/*
-   No automatic font resizing on window resize.
-   The song sheet remains fixed-width on every device.
-*/
 </script>
 
 </body>
