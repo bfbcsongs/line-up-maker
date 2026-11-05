@@ -424,7 +424,53 @@ header {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
     transition: background 0.2s, border-color 0.2s;
 }
+    
+/* SONG PART BLOCK */
+.song-part-block {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 0 0 14px 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+}
 
+/* FULL BLOCK HIGHLIGHT */
+.song-part-block.active-block {
+    background: rgba(250, 204, 21, 0.12) !important;
+    border: 1px solid var(--highlight) !important;
+    border-radius: 10px;
+}
+
+/* SONG PART TITLE */
+.song-part-title-wrapper {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.song-part-title {
+    display: inline-block;
+    color: var(--section);
+    font-weight: bold;
+    text-align: center;
+}
+
+/* SONG PART CONTENT */
+.song-part-content {
+    display: block;
+    width: 100%;
+    white-space: pre;
+    color: var(--text-main);
+}
+
+/* CHORD COLOR */
+.chord {
+    color: #4ade80 !important;
+    font-weight: bold;
+}
 /* Selected Jumper - Yellow Outline Only */
 .jumper-chip:active,
 .jumper-chip.selected {
