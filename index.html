@@ -302,19 +302,25 @@ header {
     justify-content: center;
 }
 
+/* ORIGINAL TEXT DISPLAY */
+
 .output-box {
     flex: 1;
     max-width: 800px;
-    padding: 16px 20px;
+    padding: 20px 16px;
     overflow-y: auto;
     overflow-x: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     line-height: 1.8;
     scroll-behavior: smooth;
     min-height: 0;
     -webkit-overflow-scrolling: touch;
     text-align: center;
+
+    /* Preserve original text layout */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 /* UNIFIED SONG EDITOR */
@@ -346,90 +352,6 @@ header {
     color: var(--text-muted);
     opacity: 0.8;
     text-align: center;
-}
-
-/* SONG PARTS */
-
-.song-part-block {
-    display: block;
-    width: 100%;
-    padding: 12px 0;
-    margin: 0 0 16px;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: transparent;
-}
-
-.song-part-block.active-block {
-    background: rgba(250, 204, 21, 0.12) !important;
-    border: 1px solid var(--highlight) !important;
-}
-
-.song-part-title-wrapper {
-    display: block;
-    width: 100%;
-    text-align: center;
-    margin-bottom: 8px;
-}
-
-.song-part-title {
-    display: inline-block;
-    color: var(--section);
-    font-weight: bold;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-}
-
-.song-part-content {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    align-items: center;
-}
-
-.lyric-line-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.lyric-text-line {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-main);
-    letter-spacing: 0.5px;
-    white-space: pre-wrap;
-    line-height: 1.8;
-}
-
-.chord-position {
-    display: inline-flex;
-    flex-direction: column;
-    vertical-align: bottom;
-    position: relative;
-    align-items: center;
-    line-height: 1.1;
-}
-
-.chord-position .chord {
-    color: var(--chord) !important;
-    font-size: 0.85em;
-    font-weight: bold;
-    white-space: nowrap;
-    min-height: 1.1em;
-    line-height: 1.1;
-}
-
-.chord-position .lyric-letter {
-    color: var(--text-main);
-    white-space: pre;
-}
-
-.chord {
-    color: var(--chord) !important;
-    font-weight: bold;
 }
 
 /* FLOATING JUMPER */
@@ -482,8 +404,12 @@ header {
     .tool-btn { font-size: 0.65rem; padding: 4px 6px; }
     .play-right-bar { right: 4px; }
     .jumper-chip { width: 62px; min-height: 36px; font-size: 0.65rem; }
-    .output-box { font-size: 1rem; padding: 10px; }
-    .lyric-text-line { font-size: 1.05rem; }
+
+    .output-box {
+        font-size: 1rem;
+        padding: 16px 10px;
+    }
+
     #editor-textarea {
         font-size: 1rem;
         padding: 16px 10px;
@@ -913,264 +839,36 @@ function transposeGlobal(amount) {
     document.getElementById("trans-val").innerText =
         globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
 
-    if (document.getElementById("view-play").classList.contains("active")) {
-        renderPlayScreen();
-    }
-
-    if (document.getElementById("view-edit").classList.contains("active")) {
-        renderEditScreen();
-    }
+    /*
+       Original text is displayed unchanged.
+       Transpose no longer modifies saved or displayed lyrics.
+    */
 }
 
-function transposeNote(chord, semitones) {
-    const match = chord.match(/^([A-G](?:#|b)?)(.*?)(?:\/([A-G](?:#|b)?))?$/);
-    if (!match) return chord;
-
-    function shift(note) {
-        if (!note) return "";
-
-        const normalized = note
-            .replace("Db", "C#")
-            .replace("Eb", "D#")
-            .replace("Gb", "F#")
-            .replace("Ab", "G#")
-            .replace("Bb", "A#");
-
-        let index = notesSharp.indexOf(normalized);
-        if (index === -1) return note;
-
-        index = (index + semitones) % 12;
-        if (index < 0) index += 12;
-
-        return notesSharp[index];
-    }
-
-    return shift(match[1]) + match[2] +
-        (match[3] ? "/" + shift(match[3]) : "");
-}
-
-/* SONG FORMATTING */
+/* ORIGINAL TEXT DISPLAY */
 
 /*
-   Recognizes the requested section labels when they appear
-   alone on their own line:
+   The app no longer interprets pasted lyrics.
 
-   Intro:
-   Verse:
-   Chorus:
-   Bridge:
-   Adlib:
-   Outro:
+   No chord detection.
+   No section detection.
+   No moving chord positions.
+   No automatic formatting.
+   No removing lines before section headings.
 
-   Existing bracketed section headings are also retained
-   for compatibility with previously saved songs.
+   The saved text is displayed directly.
 */
-
-function isSongPartHeading(line) {
-    const text = line.trim();
-    if (!text) return null;
-
-    const colonLabels = [
-        "Intro",
-        "Verse",
-        "Chorus",
-        "Bridge",
-        "Adlib",
-        "Outro"
-    ];
-
-    const colonMatch = colonLabels.find(label =>
-        new RegExp("^" + label + ":$", "i").test(text)
-    );
-
-    if (colonMatch) {
-        return colonMatch.toUpperCase();
-    }
-
-    const bracketMatch = text.match(/^\[(.*?)\]$/);
-
-    if (!bracketMatch) return null;
-
-    const legacyText = bracketMatch[1].trim();
-
-    const legacyPatterns = [
-        /^intro(?:duction)?$/i,
-        /^verse(?:\s*\d+)?$/i,
-        /^v(?:erse)?\s*\d+$/i,
-        /^chorus$/i,
-        /^pre[\s-]?chorus$/i,
-        /^post[\s-]?chorus$/i,
-        /^bridge$/i,
-        /^ad[\s-]?lib$/i,
-        /^outro$/i,
-        /^ending$/i,
-        /^end$/i,
-        /^refrain$/i,
-        /^tag$/i,
-        /^instrumental$/i,
-        /^interlude$/i,
-        /^solo$/i,
-        /^repeat(?:\s+chorus)?$/i,
-        /^turnaround$/i,
-        /^vamp$/i,
-        /^coda$/i,
-        /^modulation$/i,
-        /^spoken$/i,
-        /^prayer$/i
-    ];
-
-    return legacyPatterns.some(pattern => pattern.test(legacyText))
-        ? legacyText.toUpperCase()
-        : null;
-}
-
-function isChordToken(token) {
-    return /^[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?$/.test(token);
-}
-
-function isPureChordLine(line) {
-    const tokens = line.trim().split(/\s+/).filter(Boolean);
-    if (!tokens.length) return false;
-
-    return tokens.every(token => {
-        const cleaned = token.replace(/^[|]+|[|]+$/g, "");
-        return cleaned === "" || isChordToken(cleaned);
-    });
-}
-
-function renderInlineChords(line) {
-    const regex = /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g;
-
-    let result = "";
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(line)) !== null) {
-        result += escapeHTML(line.substring(lastIndex, match.index));
-
-        const chord = transposeNote(match[1], globalSemitones);
-        const nextChar = line.charAt(regex.lastIndex);
-
-        if (!nextChar) {
-            result += `<span class="chord">${escapeHTML(chord)}</span>`;
-        } else {
-            result += `
-                <span class="chord-position">
-                    <span class="chord">${escapeHTML(chord)}</span>
-                    <span class="lyric-letter">${escapeHTML(nextChar)}</span>
-                </span>
-            `;
-
-            regex.lastIndex++;
-        }
-
-        lastIndex = regex.lastIndex;
-    }
-
-    result += escapeHTML(line.substring(lastIndex));
-
-    return result;
-}
 
 function renderSongContent(box, jumper, isPlayMode) {
     if (!box) return;
 
     box.innerHTML = "";
-    if (jumper) jumper.innerHTML = "";
 
-    const content = currentPlayingSong.content || "";
-    const rawLines = content.split(/\r?\n/);
-
-    let htmlOutput = "";
-    let partCounter = 0;
-    let insideBlock = false;
-    let pendingChords = "";
-
-    function closeBlock() {
-        if (!insideBlock) return;
-
-        if (pendingChords) {
-            htmlOutput += `
-                <div class="lyric-line-wrapper">
-                    <div class="chord-line">${pendingChords}</div>
-                </div>
-            `;
-            pendingChords = "";
-        }
-
-        htmlOutput += "</div></div>";
-        insideBlock = false;
+    if (jumper) {
+        jumper.innerHTML = "";
     }
 
-    function createBlock(label) {
-        const id = "song-part-" + partCounter++;
-
-        htmlOutput += `
-            <div id="${id}" class="song-part-block">
-                <div class="song-part-title-wrapper">
-                    <span class="song-part-title">[${escapeHTML(label)}]</span>
-                </div>
-                <div class="song-part-content">
-        `;
-
-        if (isPlayMode && jumper) {
-            const chip = document.createElement("button");
-            chip.className = "jumper-chip";
-            chip.textContent = label;
-            chip.dataset.target = id;
-            chip.onclick = () => jumpToBlock(id);
-            jumper.appendChild(chip);
-        }
-
-        insideBlock = true;
-    }
-
-    const chordRegex = /[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?/g;
-
-    for (const line of rawLines) {
-        const trimmed = line.trim();
-        const detectedPart = isSongPartHeading(trimmed);
-
-        if (detectedPart) {
-            closeBlock();
-            createBlock(detectedPart);
-            continue;
-        }
-
-        if (!insideBlock || !trimmed) continue;
-
-        if (isPureChordLine(trimmed)) {
-            if (pendingChords) {
-                htmlOutput += `
-                    <div class="lyric-line-wrapper">
-                        <div class="chord-line">${pendingChords}</div>
-                    </div>
-                `;
-            }
-
-            pendingChords = trimmed.replace(chordRegex, chord =>
-                `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`
-            );
-
-            continue;
-        }
-
-        const lyricHTML = renderInlineChords(line);
-
-        htmlOutput += `
-            <div class="lyric-line-wrapper">
-                ${pendingChords ? `<div class="chord-line">${pendingChords}</div>` : ""}
-                <div class="lyric-text-line">${lyricHTML}</div>
-            </div>
-        `;
-
-        pendingChords = "";
-    }
-
-    closeBlock();
-
-    box.innerHTML = htmlOutput ||
-        '<div class="empty-message">No song sections found. Add section labels such as Intro: or Verse: on their own lines.</div>';
+    box.textContent = currentPlayingSong.content || "";
 
     box.scrollTop = 0;
 }
@@ -1189,38 +887,6 @@ function renderEditScreen() {
         null,
         false
     );
-}
-
-function jumpToBlock(id) {
-    const box = document.getElementById("play-lyrics-box");
-    const target = document.getElementById(id);
-
-    if (!box || !target) return;
-
-    box.querySelectorAll(".song-part-block").forEach(block =>
-        block.classList.remove("active-block")
-    );
-
-    target.classList.add("active-block");
-
-    document.querySelectorAll(".jumper-chip").forEach(chip =>
-        chip.classList.toggle("selected", chip.dataset.target === id)
-    );
-
-    const boxRect = box.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-
-    const targetPosition =
-        box.scrollTop +
-        targetRect.top -
-        boxRect.top -
-        (box.clientHeight / 2) +
-        (target.offsetHeight / 2);
-
-    box.scrollTo({
-        top: Math.max(0, targetPosition),
-        behavior: "smooth"
-    });
 }
 
 /* SET LIST */
@@ -1469,7 +1135,7 @@ function openEditSongDirect(title) {
     switchView("view-edit");
 }
 
-/* EDIT BUTTON: OPEN THE SAME EDITOR USED BY ADD SONG */
+/* EDIT BUTTON */
 
 function openFullEditor() {
     if (!currentPlayingSong.title) return;
@@ -1510,9 +1176,12 @@ function openPlayToEdit() {
 /* SAVE NEW OR EDITED SONG */
 
 async function saveSongFromEditor() {
-    const content = document.getElementById("editor-textarea").value.trim();
 
-    if (!content) {
+    // Read the complete text without trimming or modifying it.
+    const content = document.getElementById("editor-textarea").value;
+
+    // Check for empty content without changing the actual content.
+    if (!content.trim()) {
         return alert("Please enter song lyrics.");
     }
 
@@ -1560,12 +1229,6 @@ async function saveSongFromEditor() {
 
         document.getElementById("edit-song-title-label").textContent = title;
         document.getElementById("play-song-title").textContent = title;
-
-        /*
-           Return to the song view after saving.
-           Remove the editor from history so Back does not
-           reopen the editor immediately.
-        */
 
         if (viewHistory[viewHistory.length - 1] === "song-editor") {
             viewHistory.pop();
