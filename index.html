@@ -395,16 +395,17 @@ header {
     -webkit-overflow-scrolling: touch;
 }
 
-.play-right-bar::-webkit-scrollbar {
-    display: none;
+background: transparent;
+backdrop-filter: none;
+-webkit-backdrop-filter: none;
+border: none;
 }
 
 /* Larger, Transparent Jumper Buttons */
-.jumper-chip {
-    background: rgba(30, 41, 59, 0.12);
-    color: var(--section);
-
-    border: 1px solid rgba(56, 189, 248, 0.35);
+background: rgba(30, 41, 59, 0.08);
+backdrop-filter: none;
+-webkit-backdrop-filter: none;
+border: 1px solid rgba(56, 189, 248, 0.35);
 
     padding: 9px 5px;
     border-radius: 11px;
@@ -434,9 +435,10 @@ header {
 /* Selected Jumper */
 .jumper-chip:active,
 .jumper-chip.selected {
-    background: rgba(250, 204, 21, 0.85);
-    color: #000;
-    border-color: var(--highlight);
+    background: rgba(30, 41, 59, 0.08);
+    color: var(--highlight);
+    border: 2px solid var(--highlight);
+    box-shadow: 0 0 5px rgba(250, 204, 21, 0.35);
 }
 
 @media(max-width: 480px) {
