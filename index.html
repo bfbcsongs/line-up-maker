@@ -34,7 +34,7 @@ try {
 
     window.dispatchEvent(new Event("firebase-ready"));
 } catch (error) {
-    console.error("Firebase initialization failed:", error);
+    console.error(error);
     alert("Firebase initialization failed: " + error.message);
 }
 </script>
@@ -46,7 +46,6 @@ try {
     --bg-color: #0b0f19;
     --panel-bg: #131b2e;
     --panel-border: #1e293b;
-    --card-bg: #1a233a;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --accent: #2563eb;
@@ -90,7 +89,6 @@ header {
     font-size: 0.85rem;
     font-weight: 700;
     color: #fff;
-    letter-spacing: 0.3px;
     white-space: nowrap;
 }
 
@@ -99,7 +97,7 @@ header {
     gap: 4px;
     align-items: center;
     overflow-x: auto;
-    max-width: 65%;
+    max-width: 75%;
 }
 
 .toolbar-tools::-webkit-scrollbar {
@@ -116,7 +114,6 @@ header {
     align-items: center;
     gap: 3px;
     font-size: 0.7rem;
-    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
 }
@@ -158,8 +155,7 @@ header {
 
 .view-section {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: none;
@@ -171,61 +167,39 @@ header {
     display: flex;
 }
 
-.active-lineup-screen {
-    flex: 1;
-    margin: 10px;
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
+/* HOME SCREEN */
+
+#view-home {
+    justify-content: center;
+    align-items: center;
+}
+
+.home-start-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.start-jam-button {
+    background: var(--accent);
+    color: white;
+    border: none;
     border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.screen-header {
-    font-size: 0.85rem;
+    padding: 17px 45px;
+    font-size: 1.15rem;
     font-weight: bold;
-    color: var(--section);
-    text-transform: uppercase;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--panel-border);
-    padding-bottom: 6px;
-}
-
-.category-row {
-    background: #0f172a;
-    border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 6px;
-}
-
-.cat-label {
-    font-weight: bold;
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    flex-shrink: 0;
-}
-
-.cat-song-title {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #fff;
     cursor: pointer;
-    flex: 1;
-    margin: 0 5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
+}
+
+/* GENERAL */
+
+.empty-message {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 18px 10px;
+    font-size: 0.85rem;
 }
 
 .drawer-overlay {
@@ -289,12 +263,22 @@ header {
     flex-shrink: 0;
 }
 
+.category-row {
+    background: #0f172a;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+
 .full-screen-container {
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    background: var(--bg-color);
 }
 
 .edit-topbar {
@@ -305,12 +289,11 @@ header {
     background: var(--panel-bg);
     border-bottom: 1px solid var(--panel-border);
     flex-shrink: 0;
-    z-index: 50;
     gap: 6px;
 }
 
-/* Centered Layout for Editor / Play Workspaces */
-.editor-workspace, .play-workspace {
+.editor-workspace,
+.play-workspace {
     display: flex;
     flex: 1;
     position: relative;
@@ -334,91 +317,38 @@ header {
     text-align: center;
 }
 
-/* Floating Transparent Jumper Bar */
-.play-right-bar {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    max-height: 75vh;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 8px 5px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    z-index: 99;
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border: none !important;
-    border-radius: 14px;
-    -webkit-overflow-scrolling: touch;
-}
+/* SONG PARTS */
 
-/* Larger, Transparent Jumper Buttons */
-.jumper-chip {
-    background: rgba(30, 41, 59, 0.08) !important;
-    color: var(--section);
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    padding: 9px 5px;
-    border-radius: 11px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    text-align: center;
-    width: 68px;
-    min-height: 38px;
-    cursor: pointer;
-    text-transform: uppercase;
-    flex-shrink: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
-    transition: background 0.2s, border-color 0.2s;
-}
-    
-/* SONG PART BLOCK */
 .song-part-block {
     display: block;
     width: 100%;
     padding: 12px 0;
-    margin: 0 0 16px 0;
+    margin: 0 0 16px;
     border: 1px solid transparent;
     border-radius: 10px;
     background: transparent;
 }
 
-/* FULL BLOCK HIGHLIGHT */
 .song-part-block.active-block {
     background: rgba(250, 204, 21, 0.12) !important;
     border: 1px solid var(--highlight) !important;
-    border-radius: 10px;
 }
 
-/* SONG PART TITLE */
 .song-part-title-wrapper {
     display: block;
     width: 100%;
     text-align: center;
-    margin-bottom: 4px;
-    padding: 0;
+    margin-bottom: 8px;
 }
 
 .song-part-title {
     display: inline-block;
     color: var(--section);
     font-weight: bold;
-    text-align: center;
-    margin: 0;
-    padding: 0;
     font-size: 0.9rem;
     letter-spacing: 1px;
 }
 
-/* SONG PART CONTENT / LYRICS LINES */
 .song-part-content {
     display: flex;
     flex-direction: column;
@@ -434,64 +364,97 @@ header {
     width: 100%;
 }
 
-/* Karaoke Style Chord & Lyric Spacing */
-.chord-line {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    font-family: monospace;
-    font-size: 0.95rem;
-    color: #facc15;
-    font-weight: bold;
-    min-height: 22px;
-    margin-bottom: 2px;
-}
+/* CHORDS ABOVE THEIR LYRIC LETTERS */
 
 .lyric-text-line {
     font-size: 1.2rem;
     font-weight: 600;
     color: var(--text-main);
     letter-spacing: 0.5px;
+    white-space: pre-wrap;
+    line-height: 1.8;
 }
 
-/* CHORD COLOR */
+.chord-position {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: bottom;
+    position: relative;
+    align-items: center;
+    line-height: 1.1;
+}
+
+.chord-position .chord {
+    color: var(--chord) !important;
+    font-size: 0.85em;
+    font-weight: bold;
+    white-space: nowrap;
+    min-height: 1.1em;
+    line-height: 1.1;
+}
+
+.chord-position .lyric-letter {
+    color: var(--text-main);
+    white-space: pre;
+}
+
 .chord {
-    color: #facc15 !important;
+    color: var(--chord) !important;
     font-weight: bold;
 }
 
-/* Selected Jumper - Yellow Outline Only */
+/* FLOATING JUMPER */
+
+.play-right-bar {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 8px 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 99;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 14px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.jumper-chip {
+    background: rgba(30, 41, 59, 0.08) !important;
+    color: var(--section);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: 9px 5px;
+    border-radius: 11px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-align: center;
+    width: 68px;
+    min-height: 38px;
+    cursor: pointer;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
 .jumper-chip:active,
 .jumper-chip.selected {
     background: rgba(30, 41, 59, 0.08) !important;
     color: var(--highlight);
     border: 2px solid var(--highlight);
-    box-shadow: 0 0 5px rgba(250, 204, 21, 0.35);
 }
 
-@media(max-width: 480px) {
-    .brand-title {
-        font-size: 0.75rem;
-    }
-    .toolbar-tools {
-        max-width: 72%;
-    }
-    .tool-btn {
-        font-size: 0.65rem;
-        padding: 4px 6px;
-    }
-    .play-right-bar {
-        right: 4px;
-    }
-    .jumper-chip {
-        width: 62px;
-        min-height: 36px;
-        font-size: 0.65rem;
-    }
-    .output-box {
-        font-size: 1rem;
-        padding: 10px;
-    }
+@media(max-width:480px) {
+    .brand-title { font-size: 0.75rem; }
+    .toolbar-tools { max-width: 75%; }
+    .tool-btn { font-size: 0.65rem; padding: 4px 6px; }
+    .play-right-bar { right: 4px; }
+    .jumper-chip { width: 62px; min-height: 36px; font-size: 0.65rem; }
+    .output-box { font-size: 1rem; padding: 10px; }
+    .lyric-text-line { font-size: 1.05rem; }
 }
 </style>
 </head>
@@ -518,32 +481,23 @@ header {
 
 <div class="workspace">
 
-<!-- HOME / ACTIVE LINEUP CANVAS VIEW -->
-<div id="view-home" class="view-section active">
-    <div class="active-lineup-screen">
-        <div class="screen-header">
-            <span>ACTIVE LINE-UP</span>
-            <span id="home-worship-leader"></span>
+    <!-- HOME -->
+    <div id="view-home" class="view-section active">
+        <div class="home-start-container">
+            <button class="start-jam-button"
+                onclick="openDrawer('drawer-setlist')">
+                Start Jam
+            </button>
         </div>
-
-        <div id="home-lineup-container" style="display:flex;flex-direction:column;gap:8px;">
-            <div class="empty-message">No active line-up. Select Start Jam.</div>
-        </div>
-
-        <button id="start-jam-btn" class="btn btn-primary"
-            onclick="openDrawer('drawer-setlist')">
-            Start Jam
-        </button>
     </div>
-</div>
 
-    <!-- EDIT (Read-Only Chords-on-Top View matching Play Mode) -->
+    <!-- EDIT VIEW -->
     <div id="view-edit" class="view-section">
         <div class="full-screen-container">
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromEdit()">⬅ Back</button>
-                <span id="edit-song-title-label" style="font-weight:bold; color:var(--accent);">Song View</span>
-                <div style="display:flex; gap:4px;">
+                <span id="edit-song-title-label" style="font-weight:bold;color:var(--accent);">Song View</span>
+                <div style="display:flex;gap:4px;">
                     <button class="btn btn-sm btn-danger" onclick="deleteCurrentSong()">Delete</button>
                     <button class="btn btn-sm btn-primary" onclick="openFullEditor()">Edit Source</button>
                 </div>
@@ -554,16 +508,18 @@ header {
         </div>
     </div>
 
-    <!-- FULL SOURCE EDITOR MODAL / VIEW -->
+    <!-- SOURCE EDITOR -->
     <div id="view-source-edit" class="view-section">
         <div class="full-screen-container">
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="switchView('view-edit')">⬅ Back</button>
-                <span style="font-weight:bold; color:var(--accent);">Edit Raw Song Source</span>
+                <span style="font-weight:bold;color:var(--accent);">Edit Raw Song Source</span>
                 <button class="btn btn-sm btn-success" onclick="saveSongFromEditor()">Save</button>
             </div>
             <div class="editor-workspace">
-                <textarea id="editor-textarea" class="output-box" style="width:100%; background:transparent; border:none; outline:none; font-family:monospace; text-align:left; resize:none;" placeholder="[Intro]..."></textarea>
+                <textarea id="editor-textarea" class="output-box"
+                    style="width:100%;background:transparent;border:none;outline:none;font-family:monospace;text-align:left;resize:none;"
+                    placeholder="[Intro]..."></textarea>
             </div>
         </div>
     </div>
@@ -573,7 +529,7 @@ header {
         <div class="full-screen-container">
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromPlay()">⬅ Back</button>
-                <span id="play-song-title" style="font-weight:bold; color:var(--section);">Song Title</span>
+                <span id="play-song-title" style="font-weight:bold;color:var(--section);">Song Title</span>
                 <button class="btn btn-sm btn-primary" onclick="openPlayToEdit()">Edit</button>
             </div>
             <div class="play-workspace">
@@ -588,8 +544,9 @@ header {
 <!-- SET LIST DRAWER -->
 <div id="drawer-setlist" class="drawer-overlay" onclick="closeDrawer('drawer-setlist')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
-        <h3 style="color:var(--success); font-size:0.95rem;">Set List (Saved Line-ups)</h3>
-        <div id="setlist-container" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+        <h3 style="color:var(--success);font-size:0.95rem;">Set List</h3>
+        <div id="setlist-container"
+            style="max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
         <button class="btn" onclick="closeDrawer('drawer-setlist')">Close</button>
     </div>
 </div>
@@ -597,9 +554,12 @@ header {
 <!-- SONG DATABASE -->
 <div id="drawer-songs" class="drawer-overlay" onclick="closeDrawer('drawer-songs')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
-        <h3 style="color:var(--accent); font-size:0.95rem;">Song Database</h3>
-        <input type="text" id="song-search-input" placeholder="Search song..." oninput="renderSongsDatabase()" style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
-        <div id="songs-db-container" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+        <h3 style="color:var(--accent);font-size:0.95rem;">Song Database</h3>
+        <input type="text" id="song-search-input" placeholder="Search song..."
+            oninput="renderSongsDatabase()"
+            style="background:#0f172a;border:1px solid #334155;color:#fff;padding:8px;border-radius:6px;">
+        <div id="songs-db-container"
+            style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
         <button class="btn" onclick="closeDrawer('drawer-songs')">Close</button>
     </div>
 </div>
@@ -607,10 +567,12 @@ header {
 <!-- NEW LINEUP -->
 <div id="drawer-newlineup" class="drawer-overlay" onclick="closeDrawer('drawer-newlineup')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
-        <h3 style="color:var(--highlight); font-size:0.95rem;">Create New Line-up</h3>
-        <input type="text" id="new-wl-name" placeholder="Worship Leader Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
-        <div id="new-lineup-selectors" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
-        <div style="display:flex; gap:6px;">
+        <h3 style="color:var(--highlight);font-size:0.95rem;">Create New Line-up</h3>
+        <input type="text" id="new-wl-name" placeholder="Worship Leader Name..."
+            style="background:#0f172a;border:1px solid #334155;color:#fff;padding:8px;border-radius:6px;">
+        <div id="new-lineup-selectors"
+            style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+        <div style="display:flex;gap:6px;">
             <button class="btn btn-sm" onclick="openAddCategoryModal()">+ Category</button>
             <button class="btn btn-success" style="flex:1;" onclick="saveNewLineUpFromForm()">Save</button>
         </div>
@@ -622,16 +584,30 @@ header {
 <div id="select-song-modal" class="drawer-overlay" onclick="closeModal('select-song-modal')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
         <h3 style="font-size:0.95rem;">Select Song for <span id="select-modal-cat" style="color:var(--section);"></span></h3>
-        <div id="modal-songs-list" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+        <div id="modal-songs-list"
+            style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
         <button class="btn" onclick="closeModal('select-song-modal')">Cancel</button>
+    </div>
+</div>
+
+<!-- SET LIST CONFIRMATION -->
+<div id="confirm-lineup-modal" class="drawer-overlay">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+        <h3 style="color:var(--success);font-size:0.95rem;">Load Line-up?</h3>
+        <p id="confirm-lineup-details" style="color:var(--text-muted);font-size:0.85rem;"></p>
+        <div style="display:flex;gap:8px;">
+            <button class="btn btn-success" style="flex:1;" onclick="confirmLoadSetList()">OK</button>
+            <button class="btn" style="flex:1;" onclick="backToSetList()">Back</button>
+        </div>
     </div>
 </div>
 
 <!-- SAVE ACTIVE LINEUP -->
 <div id="save-lineup-modal" class="drawer-overlay" onclick="closeModal('save-lineup-modal')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
-        <h3 style="color:var(--success); font-size:0.95rem;">Save Active Line-up</h3>
-        <input type="text" id="save-wl-input" placeholder="Worship Leader Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
+        <h3 style="color:var(--success);font-size:0.95rem;">Save Active Line-up</h3>
+        <input type="text" id="save-wl-input" placeholder="Worship Leader Name..."
+            style="background:#0f172a;border:1px solid #334155;color:#fff;padding:8px;border-radius:6px;">
         <button class="btn btn-success" onclick="confirmSaveActiveLineUp()">Save</button>
         <button class="btn" onclick="closeModal('save-lineup-modal')">Cancel</button>
     </div>
@@ -639,10 +615,10 @@ header {
 
 <!-- QR -->
 <div id="qr-modal" class="drawer-overlay" onclick="closeModal('qr-modal')">
-    <div class="drawer-panel" onclick="event.stopPropagation()" style="align-items:center; text-align:center;">
+    <div class="drawer-panel" onclick="event.stopPropagation()" style="align-items:center;text-align:center;">
         <h3 style="font-size:0.95rem;">Local Wi-Fi QR Code</h3>
-        <div id="qrcode" style="background:#fff; padding:10px; border-radius:8px;"></div>
-        <p style="font-size:0.75rem; color:var(--text-muted); word-break:break-all;" id="wifi-link-text"></p>
+        <div id="qrcode" style="background:#fff;padding:10px;border-radius:8px;"></div>
+        <p style="font-size:0.75rem;color:var(--text-muted);word-break:break-all;" id="wifi-link-text"></p>
         <button class="btn" onclick="closeModal('qr-modal')">Close</button>
     </div>
 </div>
@@ -651,7 +627,8 @@ header {
 <div id="add-cat-modal" class="drawer-overlay" onclick="closeModal('add-cat-modal')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
         <h3 style="font-size:0.95rem;">Add Custom Category</h3>
-        <input type="text" id="new-cat-input" placeholder="Category Name..." style="background:#0f172a; border:1px solid #334155; color:#fff; padding:8px; border-radius:6px; outline:none;">
+        <input type="text" id="new-cat-input" placeholder="Category Name..."
+            style="background:#0f172a;border:1px solid #334155;color:#fff;padding:8px;border-radius:6px;">
         <button class="btn btn-primary" onclick="confirmAddCategory()">Add</button>
         <button class="btn" onclick="closeModal('add-cat-modal')">Cancel</button>
     </div>
@@ -670,6 +647,7 @@ let activeEditingKey = null;
 let currentPlayingSong = { title: "", content: "" };
 let activeCategoryToAssign = null;
 let viewHistory = ["home"];
+let pendingSetListIndex = null;
 
 const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 let firebaseInitialized = false;
@@ -680,75 +658,71 @@ function initializeFirebase() {
     if (firebaseInitialized || !window.fbDB) return;
     firebaseInitialized = true;
 
-    window.fbOnValue(
-        window.fbRef(window.fbDB, "worship_songs"),
-        snapshot => {
-            const data = snapshot.val() || {};
+    window.fbOnValue(window.fbRef(window.fbDB, "worship_songs"), snapshot => {
+        const data = snapshot.val() || {};
+        songsDatabase = {};
+        songKeys = {};
+
+        Object.entries(data).forEach(([key, content]) => {
+            const title = songTitles[key] || key.replace(/_/g, " ");
+            songsDatabase[title] = content;
+            songKeys[title] = key;
+        });
+
+        renderSongsDatabase();
+        renderNewLineUpForm();
+    });
+
+    window.fbOnValue(window.fbRef(window.fbDB, "worship_song_titles"), snapshot => {
+        songTitles = snapshot.val() || {};
+
+        window.fbGet(window.fbRef(window.fbDB, "worship_songs")).then(songSnapshot => {
             songsDatabase = {};
             songKeys = {};
-            Object.entries(data).forEach(([key, content]) => {
+
+            Object.entries(songSnapshot.val() || {}).forEach(([key, content]) => {
                 const title = songTitles[key] || key.replace(/_/g, " ");
                 songsDatabase[title] = content;
                 songKeys[title] = key;
             });
+
             renderSongsDatabase();
             renderNewLineUpForm();
-        },
-        error => console.error("Songs listener:", error)
-    );
+        }).catch(console.error);
+    });
 
-    window.fbOnValue(
-        window.fbRef(window.fbDB, "worship_song_titles"),
-        snapshot => {
-            songTitles = snapshot.val() || {};
-            window.fbGet(window.fbRef(window.fbDB, "worship_songs")).then(songSnapshot => {
-                songsDatabase = {};
-                songKeys = {};
-                const data = songSnapshot.val() || {};
-                Object.entries(data).forEach(([key, content]) => {
-                    const title = songTitles[key] || key.replace(/_/g, " ");
-                    songsDatabase[title] = content;
-                    songKeys[title] = key;
-                });
-                renderSongsDatabase();
-                renderNewLineUpForm();
-            }).catch(console.error);
-        },
-        error => console.error("Song titles listener:", error)
-    );
+    window.fbOnValue(window.fbRef(window.fbDB, "worship_setlists"), snapshot => {
+        const data = snapshot.val();
 
-    window.fbOnValue(
-        window.fbRef(window.fbDB, "worship_setlists"),
-        snapshot => {
-            const data = snapshot.val();
-            if (!data) {
-                setLists = [];
-            } else if (Array.isArray(data)) {
-                setLists = data.filter(Boolean);
-            } else {
-                setLists = Object.values(data).filter(Boolean);
-            }
-            renderSetList();
-        },
-        error => console.error("Set lists listener:", error)
-    );
+        if (!data) {
+            setLists = [];
+        } else if (Array.isArray(data)) {
+            setLists = data.filter(Boolean);
+        } else {
+            setLists = Object.values(data).filter(Boolean);
+        }
 
-    window.fbOnValue(
-        window.fbRef(window.fbDB, "worship_categories"),
-        snapshot => {
-            const saved = snapshot.val();
-            if (Array.isArray(saved) && saved.length) {
-                categories = saved;
-            }
-            renderNewLineUpForm();
-        },
-        error => console.error("Categories listener:", error)
-    );
+        renderSetList();
+    });
+
+    window.fbOnValue(window.fbRef(window.fbDB, "worship_categories"), snapshot => {
+        const saved = snapshot.val();
+
+        if (Array.isArray(saved) && saved.length) {
+            categories = saved;
+        }
+
+        renderNewLineUpForm();
+    });
 }
 
 function escapeHTML(value) {
     return String(value).replace(/[&<>"']/g, char => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
     })[char]);
 }
 
@@ -762,11 +736,13 @@ function getSongKey(title) {
 
 function switchView(viewName, pushHistory = true) {
     document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
+
     const target = document.getElementById("view-" + viewName);
     if (target) target.classList.add("active");
 
     if (pushHistory) {
         const currentTop = viewHistory[viewHistory.length - 1];
+
         if (currentTop !== viewName) {
             viewHistory.push(viewName);
         }
@@ -776,8 +752,7 @@ function switchView(viewName, pushHistory = true) {
 function goBack() {
     if (viewHistory.length > 1) {
         viewHistory.pop();
-        const previousView = viewHistory[viewHistory.length - 1];
-        switchView(previousView, false);
+        switchView(viewHistory[viewHistory.length - 1], false);
     } else {
         switchView("home", false);
     }
@@ -788,28 +763,32 @@ function goBackFromPlay() { goBack(); }
 
 function openDrawer(drawerId) {
     document.querySelectorAll(".drawer-overlay").forEach(el => el.style.display = "none");
-    const d = document.getElementById(drawerId);
-    if (d) d.style.display = "flex";
+
+    const drawer = document.getElementById(drawerId);
+    if (drawer) drawer.style.display = "flex";
 }
 
 function closeDrawer(drawerId) {
-    const d = document.getElementById(drawerId);
-    if (d) d.style.display = "none";
+    const drawer = document.getElementById(drawerId);
+    if (drawer) drawer.style.display = "none";
 }
 
 function closeModal(modalId) {
-    const m = document.getElementById(modalId);
-    if (m) m.style.display = "none";
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = "none";
 }
 
 function transposeGlobal(amount) {
     globalSemitones += amount;
-    const el = document.getElementById("trans-val");
-    if (el) el.innerText = globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
-    if (document.getElementById("view-play")?.classList.contains("active")) {
+
+    document.getElementById("trans-val").innerText =
+        globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
+
+    if (document.getElementById("view-play").classList.contains("active")) {
         renderPlayScreen();
     }
-    if (document.getElementById("view-edit")?.classList.contains("active")) {
+
+    if (document.getElementById("view-edit").classList.contains("active")) {
         renderEditScreen();
     }
 }
@@ -820,27 +799,59 @@ function transposeNote(chord, semitones) {
 
     function shift(note) {
         if (!note) return "";
-        const normalized = note.replace("Db", "C#").replace("Eb", "D#").replace("Gb", "F#").replace("Ab", "G#").replace("Bb", "A#");
+
+        const normalized = note
+            .replace("Db", "C#")
+            .replace("Eb", "D#")
+            .replace("Gb", "F#")
+            .replace("Ab", "G#")
+            .replace("Bb", "A#");
+
         let index = notesSharp.indexOf(normalized);
         if (index === -1) return note;
+
         index = (index + semitones) % 12;
         if (index < 0) index += 12;
+
         return notesSharp[index];
     }
-    return shift(match[1]) + match[2] + (match[3] ? "/" + shift(match[3]) : "");
+
+    return shift(match[1]) + match[2] +
+        (match[3] ? "/" + shift(match[3]) : "");
 }
 
 function isSongPartHeading(line) {
     let text = line.trim();
     if (!text) return null;
+
     text = text.replace(/^\[(.*?)\]$/, "$1").trim().replace(/:$/, "").trim();
+
     const patterns = [
-        /^intro(?:duction)?$/i, /^verse(?:\s*\d+)?$/i, /^v(?:erse)?\s*\d+$/i,
-        /^chorus$/i, /^pre[\s-]?chorus$/i, /^post[\s-]?chorus$/i, /^bridge$/i,
-        /^ad[\s-]?lib$/i, /^outro$/i, /^ending$/i, /^end$/i, /^refrain$/i,
-        /^tag$/i, /^instrumental$/i, /^interlude$/i, /^solo$/i, /^repeat(?:\s+chorus)?$/i,
-        /^turnaround$/i, /^vamp$/i, /^coda$/i, /^modulation$/i, /^spoken$/i, /^prayer$/i
+        /^intro(?:duction)?$/i,
+        /^verse(?:\s*\d+)?$/i,
+        /^v(?:erse)?\s*\d+$/i,
+        /^chorus$/i,
+        /^pre[\s-]?chorus$/i,
+        /^post[\s-]?chorus$/i,
+        /^bridge$/i,
+        /^ad[\s-]?lib$/i,
+        /^outro$/i,
+        /^ending$/i,
+        /^end$/i,
+        /^refrain$/i,
+        /^tag$/i,
+        /^instrumental$/i,
+        /^interlude$/i,
+        /^solo$/i,
+        /^repeat(?:\s+chorus)?$/i,
+        /^turnaround$/i,
+        /^vamp$/i,
+        /^coda$/i,
+        /^modulation$/i,
+        /^spoken$/i,
+        /^prayer$/i
     ];
+
     return patterns.some(pattern => pattern.test(text)) ? text.toUpperCase() : null;
 }
 
@@ -850,345 +861,429 @@ function isChordToken(token) {
 
 function isPureChordLine(line) {
     const tokens = line.trim().split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) return false;
+    if (!tokens.length) return false;
+
     return tokens.every(token => {
         const cleaned = token.replace(/^[|]+|[|]+$/g, "");
         return cleaned === "" || isChordToken(cleaned);
     });
 }
 
-function renderPlayScreen() {
-    const box = document.getElementById("play-lyrics-box");
-    const jumper = document.getElementById("floating-jumper-bar");
-    if (!box || !jumper) return;
+/*
+   Inline chord format:
+   [C]Amazing [G]grace how [F]sweet
+
+   Each chord is displayed ABOVE the first lyric character
+   following its marker, using green font.
+*/
+
+function renderInlineChords(line) {
+    const regex = /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g;
+
+    let result = "";
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(line)) !== null) {
+        result += escapeHTML(line.substring(lastIndex, match.index));
+
+        const chord = transposeNote(match[1], globalSemitones);
+        const nextChar = line.charAt(regex.lastIndex);
+
+        if (!nextChar) {
+            result += `<span class="chord">${escapeHTML(chord)}</span>`;
+        } else {
+            result += `
+                <span class="chord-position">
+                    <span class="chord">${escapeHTML(chord)}</span>
+                    <span class="lyric-letter">${escapeHTML(nextChar)}</span>
+                </span>
+            `;
+
+            regex.lastIndex++;
+        }
+
+        lastIndex = regex.lastIndex;
+    }
+
+    result += escapeHTML(line.substring(lastIndex));
+
+    return result;
+}
+
+function renderSongContent(box, jumper, isPlayMode) {
+    if (!box) return;
 
     box.innerHTML = "";
-    jumper.innerHTML = "";
+    if (jumper) jumper.innerHTML = "";
 
     const content = currentPlayingSong.content || "";
     const rawLines = content.split(/\r?\n/);
-    
+
     let htmlOutput = "";
     let partCounter = 0;
     let insideBlock = false;
     let pendingChords = "";
 
     function closeBlock() {
-        if (insideBlock) {
-            if (pendingChords) {
-                htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
-                pendingChords = "";
-            }
-            htmlOutput += "</div></div>\n";
-            insideBlock = false;
+        if (!insideBlock) return;
+
+        if (pendingChords) {
+            htmlOutput += `
+                <div class="lyric-line-wrapper">
+                    <div class="chord-line">${pendingChords}</div>
+                </div>
+            `;
+            pendingChords = "";
         }
+
+        htmlOutput += "</div></div>";
+        insideBlock = false;
     }
 
     function createBlock(label) {
         const id = "song-part-" + partCounter++;
+
         htmlOutput += `
             <div id="${id}" class="song-part-block">
-                <div class="song-part-title-wrapper">
-                    <span class="song-part-title" onclick="jumpToBlock('${id}')">[${escapeHTML(label)}]</span>
-                </div>
-                <div class="song-part-content">
-        `;
-        const chip = document.createElement("button");
-        chip.className = "jumper-chip";
-        chip.textContent = label;
-        chip.dataset.target = id;
-        chip.onclick = () => jumpToBlock(id);
-        jumper.appendChild(chip);
-        insideBlock = true;
-    }
-
-    const chordRegex = /[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?/g;
-
-    for (let i = 0; i < rawLines.length; i++) {
-        const line = rawLines[i];
-        const trimmed = line.trim();
-        const detectedPart = isSongPartHeading(trimmed);
-
-        if (detectedPart) {
-            closeBlock();
-            createBlock(detectedPart);
-        } else if (insideBlock) {
-            if (!trimmed) {
-                if (pendingChords) {
-                    htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
-                    pendingChords = "";
-                }
-                continue;
-            }
-
-            if (isPureChordLine(trimmed)) {
-                if (pendingChords) {
-                    htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
-                }
-                pendingChords = trimmed.replace(chordRegex, chord => `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`);
-            } else {
-                let lyricText = escapeHTML(line);
-                lyricText = lyricText.replace(/\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g, (match, chord) => {
-                    return `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`;
-                });
-
-                const chordsToRender = pendingChords;
-                pendingChords = "";
-
-                htmlOutput += `
-                    <div class="lyric-line-wrapper">
-                        ${chordsToRender ? `<div class="chord-line">${chordsToRender}</div>` : ''}
-                        <div class="lyric-text-line">${lyricText}</div>
-                    </div>
-                `;
-            }
-        }
-    }
-    closeBlock();
-
-    box.innerHTML = htmlOutput || '<div class="empty-message">No song sections found. Add section headers like [Verse 1].</div>';
-    box.scrollTop = 0;
-}
-
-function renderEditScreen() {
-    const box = document.getElementById("edit-lyrics-box");
-    if (!box) return;
-
-    box.innerHTML = "";
-    const content = currentPlayingSong.content || "";
-    const rawLines = content.split(/\r?\n/);
-    
-    let htmlOutput = "";
-    let insideBlock = false;
-    let pendingChords = "";
-
-    function closeBlock() {
-        if (insideBlock) {
-            if (pendingChords) {
-                htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
-                pendingChords = "";
-            }
-            htmlOutput += "</div></div>\n";
-            insideBlock = false;
-        }
-    }
-
-    function createBlock(label) {
-        htmlOutput += `
-            <div class="song-part-block">
                 <div class="song-part-title-wrapper">
                     <span class="song-part-title">[${escapeHTML(label)}]</span>
                 </div>
                 <div class="song-part-content">
         `;
+
+        if (isPlayMode && jumper) {
+            const chip = document.createElement("button");
+            chip.className = "jumper-chip";
+            chip.textContent = label;
+            chip.dataset.target = id;
+            chip.onclick = () => jumpToBlock(id);
+            jumper.appendChild(chip);
+        }
+
         insideBlock = true;
     }
 
     const chordRegex = /[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?/g;
 
-    for (let i = 0; i < rawLines.length; i++) {
-        const line = rawLines[i];
+    for (const line of rawLines) {
         const trimmed = line.trim();
         const detectedPart = isSongPartHeading(trimmed);
 
         if (detectedPart) {
             closeBlock();
             createBlock(detectedPart);
-        } else if (insideBlock) {
-            if (!trimmed) {
-                if (pendingChords) {
-                    htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
-                    pendingChords = "";
-                }
-                continue;
-            }
+            continue;
+        }
 
-            if (isPureChordLine(trimmed)) {
-                if (pendingChords) {
-                    htmlOutput += `<div class="lyric-line-wrapper"><div class="chord-line">${pendingChords}</div><div class="lyric-text-line"></div></div>\n`;
-                }
-                pendingChords = trimmed.replace(chordRegex, chord => `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`);
-            } else {
-                let lyricText = escapeHTML(line);
-                lyricText = lyricText.replace(/\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|M)?\d*(?:\/[A-G](?:#|b)?)?)\]/g, (match, chord) => {
-                    return `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`;
-                });
+        if (!insideBlock || !trimmed) continue;
 
-                const chordsToRender = pendingChords;
-                pendingChords = "";
-
+        if (isPureChordLine(trimmed)) {
+            if (pendingChords) {
                 htmlOutput += `
                     <div class="lyric-line-wrapper">
-                        ${chordsToRender ? `<div class="chord-line">${chordsToRender}</div>` : ''}
-                        <div class="lyric-text-line">${lyricText}</div>
+                        <div class="chord-line">${pendingChords}</div>
                     </div>
                 `;
             }
+
+            pendingChords = trimmed.replace(chordRegex, chord =>
+                `<span class="chord">${escapeHTML(transposeNote(chord, globalSemitones))}</span>`
+            );
+
+            continue;
         }
+
+        const lyricHTML = renderInlineChords(line);
+
+        htmlOutput += `
+            <div class="lyric-line-wrapper">
+                ${pendingChords ? `<div class="chord-line">${pendingChords}</div>` : ""}
+                <div class="lyric-text-line">${lyricHTML}</div>
+            </div>
+        `;
+
+        pendingChords = "";
     }
+
     closeBlock();
 
-    box.innerHTML = htmlOutput || '<div class="empty-message">No song sections found.</div>';
+    box.innerHTML = htmlOutput ||
+        '<div class="empty-message">No song sections found. Add section headers like [Verse 1].</div>';
+
     box.scrollTop = 0;
+}
+
+function renderPlayScreen() {
+    renderSongContent(
+        document.getElementById("play-lyrics-box"),
+        document.getElementById("floating-jumper-bar"),
+        true
+    );
+}
+
+function renderEditScreen() {
+    renderSongContent(
+        document.getElementById("edit-lyrics-box"),
+        null,
+        false
+    );
 }
 
 function jumpToBlock(id) {
     const box = document.getElementById("play-lyrics-box");
     const target = document.getElementById(id);
+
     if (!box || !target) return;
 
-    box.querySelectorAll(".song-part-block").forEach(b => b.classList.remove("active-block"));
+    box.querySelectorAll(".song-part-block").forEach(block =>
+        block.classList.remove("active-block")
+    );
+
     target.classList.add("active-block");
-    document.querySelectorAll(".jumper-chip").forEach(c => c.classList.toggle("selected", c.dataset.target === id));
+
+    document.querySelectorAll(".jumper-chip").forEach(chip =>
+        chip.classList.toggle("selected", chip.dataset.target === id)
+    );
 
     const boxRect = box.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
-    const targetPosition = box.scrollTop + targetRect.top - boxRect.top - (box.clientHeight / 2) + (target.offsetHeight / 2);
-    box.scrollTo({ top: Math.max(0, targetPosition), behavior: "smooth" });
+
+    const targetPosition =
+        box.scrollTop +
+        targetRect.top -
+        boxRect.top -
+        (box.clientHeight / 2) +
+        (target.offsetHeight / 2);
+
+    box.scrollTo({
+        top: Math.max(0, targetPosition),
+        behavior: "smooth"
+    });
+}
+
+/* SET LIST: SORT BY DATE, THEN WORSHIP LEADER */
+
+function getSetListDate(sl) {
+    return sl.createdAt || sl.dateCreated || sl.timestamp || 0;
 }
 
 function renderSetList() {
     const container = document.getElementById("setlist-container");
     if (!container) return;
+
     container.innerHTML = "";
 
-    if (setLists.length === 0) {
+    if (!setLists.length) {
         container.innerHTML = '<span class="empty-message">No saved set lists.</span>';
         return;
     }
 
-    setLists.forEach((sl, index) => {
+    const sortedLists = setLists
+        .map((item, originalIndex) => ({ ...item, originalIndex }))
+        .sort((a, b) => {
+            const dateDifference = getSetListDate(b) - getSetListDate(a);
+
+            if (dateDifference !== 0) return dateDifference;
+
+            return String(b.worshipLeader || "")
+                .localeCompare(String(a.worshipLeader || ""));
+        });
+
+    sortedLists.forEach((sl, displayIndex) => {
         const row = document.createElement("div");
         row.className = "category-row";
-        const name = document.createElement("span");
-        name.style.cssText = "font-size:0.85rem;font-weight:bold;color:var(--success);flex:1;";
-        name.textContent = (index + 1) + ". " + (sl.worshipLeader || "Unnamed");
 
-        const btnGroup = document.createElement("div");
-        btnGroup.style.cssText = "display:flex; gap:4px;";
+        row.style.flexDirection = "column";
+        row.style.alignItems = "stretch";
+        row.style.gap = "5px";
+
+        const heading = document.createElement("div");
+        heading.style.cssText =
+            "display:flex;justify-content:space-between;align-items:center;gap:8px;";
+
+        const name = document.createElement("span");
+        name.style.cssText =
+            "font-size:0.85rem;font-weight:bold;color:var(--success);flex:1;";
+
+        name.textContent = (displayIndex + 1) + ". " +
+            (sl.worshipLeader || "Unnamed Worship Leader");
+
+        const date = document.createElement("span");
+        date.style.cssText =
+            "font-size:0.68rem;color:var(--text-muted);";
+
+        const dateValue = getSetListDate(sl);
+
+        date.textContent = dateValue
+            ? new Date(dateValue).toLocaleDateString()
+            : "Date unavailable";
+
+        heading.append(name, date);
+
+        const buttons = document.createElement("div");
+        buttons.style.cssText = "display:flex;gap:5px;";
 
         const load = document.createElement("button");
         load.className = "btn btn-sm btn-primary";
-        load.textContent = "Load";
+        load.textContent = "Select";
+
         load.onclick = () => {
-            loadSetListToActive(index);
+            pendingSetListIndex = sl.originalIndex;
+
+            document.getElementById("confirm-lineup-details").textContent =
+                "Worship Leader: " +
+                (sl.worshipLeader || "Unnamed");
+
             closeDrawer("drawer-setlist");
+            document.getElementById("confirm-lineup-modal").style.display = "flex";
         };
 
         const del = document.createElement("button");
         del.className = "btn btn-sm btn-danger";
         del.textContent = "Delete";
+
         del.onclick = async () => {
-            const wlTitle = sl.worshipLeader || `Set List #${index + 1}`;
-            if (!confirm(`Are you sure you want to delete the set list for "${wlTitle}"?`)) return;
+            const leader = sl.worshipLeader || "Unnamed";
+
+            if (!confirm(`Delete the set list for "${leader}"?`)) return;
 
             try {
-                setLists.splice(index, 1);
-                await window.fbSet(window.fbRef(window.fbDB, "worship_setlists"), setLists);
+                setLists.splice(sl.originalIndex, 1);
+                await window.fbSet(
+                    window.fbRef(window.fbDB, "worship_setlists"),
+                    setLists
+                );
+
                 renderSetList();
-            } catch (e) {
-                alert("Error deleting set list: " + e.message);
+            } catch (error) {
+                alert("Error deleting set list: " + error.message);
             }
         };
 
-        btnGroup.append(load, del);
-        row.append(name, btnGroup);
+        buttons.append(load, del);
+        row.append(heading, buttons);
         container.appendChild(row);
     });
 }
 
-function loadSetListToActive(index) {
-    const sl = setLists[index];
+/* CONFIRMATION: OK LOADS, BACK RETURNS TO SET LIST */
+
+function confirmLoadSetList() {
+    if (pendingSetListIndex === null) return;
+
+    const sl = setLists[pendingSetListIndex];
 
     if (!sl || !sl.lineup) {
         alert("Unable to load selected Set List.");
+        closeModal("confirm-lineup-modal");
+        pendingSetListIndex = null;
         return;
     }
 
     activeLineUp = { ...sl.lineup };
 
-    const leader = document.getElementById("home-worship-leader");
-    if (leader) {
-        leader.textContent = sl.worshipLeader || "Unnamed";
-    }
-
-    renderActiveLineUp();
-
-    closeDrawer("drawer-setlist");
-    switchView("home");
-}
-
-function renderActiveLineUp() {
-    const container = document.getElementById("home-lineup-container");
-    const startButton = document.getElementById("start-jam-btn");
-
-    if (!container) return;
-
-    container.innerHTML = "";
+    closeModal("confirm-lineup-modal");
+    pendingSetListIndex = null;
 
     const entries = Object.entries(activeLineUp);
 
-    if (entries.length === 0) {
-        container.innerHTML =
-            '<div class="empty-message">No songs assigned.</div>';
-
-        if (startButton) startButton.style.display = "block";
+    if (!entries.length) {
+        alert("This set list has no assigned songs.");
         return;
     }
 
-    entries.forEach(([category, song]) => {
-        const row = document.createElement("div");
-        row.className = "category-row";
+    playLineUp();
+}
 
-        const label = document.createElement("span");
-        label.className = "cat-label";
-        label.textContent = category;
+function backToSetList() {
+    closeModal("confirm-lineup-modal");
+    pendingSetListIndex = null;
+    openDrawer("drawer-setlist");
+}
 
-        const title = document.createElement("span");
-        title.className = "cat-song-title";
-        title.textContent = song;
+/* PLAY LOADED LINE-UP */
 
-        title.onclick = () => {
-            if (songsDatabase[song] !== undefined) {
-                openEditSongDirect(song);
-            } else {
-                alert("Song not found: " + song);
-            }
-        };
+let playLineUpEntries = [];
+let currentLineUpIndex = 0;
 
-        row.append(label, title);
-        container.appendChild(row);
-    });
+function playLineUp() {
+    playLineUpEntries = Object.entries(activeLineUp);
+    currentLineUpIndex = 0;
 
-    if (startButton) startButton.style.display = "none";
+    if (!playLineUpEntries.length) return;
+
+    playLineUpSongAt(0);
+}
+
+function playLineUpSongAt(index) {
+    if (index < 0 || index >= playLineUpEntries.length) return;
+
+    currentLineUpIndex = index;
+
+    const [category, title] = playLineUpEntries[index];
+
+    if (!songsDatabase[title]) {
+        alert("Song not found: " + title);
+        return;
+    }
+
+    currentPlayingSong = {
+        title: title,
+        content: songsDatabase[title]
+    };
+
+    document.getElementById("play-song-title").textContent =
+        category + " — " + title;
+
+    renderPlayScreen();
+    switchView("play");
 }
 
 function renderSongsDatabase() {
     const container = document.getElementById("songs-db-container");
     const searchInput = document.getElementById("song-search-input");
+
     if (!container || !searchInput) return;
 
     container.innerHTML = "";
-    const query = searchInput.value.toLowerCase();
-    const titles = Object.keys(songsDatabase).filter(t => t.toLowerCase().includes(query)).sort();
 
-    if (titles.length === 0) {
+    const query = searchInput.value.toLowerCase();
+
+    const titles = Object.keys(songsDatabase)
+        .filter(title => title.toLowerCase().includes(query))
+        .sort();
+
+    if (!titles.length) {
         container.innerHTML = '<span class="empty-message">No matching songs.</span>';
         return;
     }
 
     titles.forEach(title => {
         const row = document.createElement("div");
-        row.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:6px 10px;border-radius:6px;gap:6px;";
+
+        row.style.cssText =
+            "display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:6px 10px;border-radius:6px;gap:6px;";
+
         const name = document.createElement("span");
-        name.style.cssText = "font-size:0.85rem;cursor:pointer;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;";
+
+        name.style.cssText =
+            "font-size:0.85rem;cursor:pointer;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;";
+
         name.textContent = "🎵 " + title;
-        name.onclick = () => { playSong(title); closeDrawer("drawer-songs"); };
+        name.onclick = () => {
+            playSong(title);
+            closeDrawer("drawer-songs");
+        };
 
         const edit = document.createElement("button");
         edit.className = "btn btn-sm";
         edit.textContent = "View";
-        edit.onclick = () => { openEditSongDirect(title); closeDrawer("drawer-songs"); };
+
+        edit.onclick = () => {
+            openEditSongDirect(title);
+            closeDrawer("drawer-songs");
+        };
 
         row.append(name, edit);
         container.appendChild(row);
@@ -1197,35 +1292,46 @@ function renderSongsDatabase() {
 
 function openAddSongModal() {
     activeEditingKey = null;
-    document.getElementById("editor-textarea").value = "[Untitled Song]\n\n[Intro]\nC   G\n\n[Verse 1]\nC   G\nLyrics here...";
+
+    document.getElementById("editor-textarea").value =
+        "[Untitled Song]\n\n[Intro]\n\n[Verse 1]\n[C]Lyrics here...";
+
     switchView("view-source-edit");
 }
 
 function openEditSongDirect(title) {
     activeEditingKey = title;
-    currentPlayingSong = { title: title, content: songsDatabase[title] || "" };
+
+    currentPlayingSong = {
+        title: title,
+        content: songsDatabase[title] || ""
+    };
+
     document.getElementById("edit-song-title-label").textContent = title;
+
     renderEditScreen();
     switchView("view-edit");
 }
 
 function openFullEditor() {
     if (activeEditingKey) {
-        document.getElementById("editor-textarea").value = `[${activeEditingKey}]\n\n` + (songsDatabase[activeEditingKey] || "");
+        document.getElementById("editor-textarea").value =
+            `[${activeEditingKey}]\n\n` +
+            (songsDatabase[activeEditingKey] || "");
     }
+
     switchView("view-source-edit");
 }
 
-function openEditorFromPlay() {
-    if (currentPlayingSong.title) openEditSongDirect(currentPlayingSong.title);
-}
-
 function openPlayToEdit() {
-    if (currentPlayingSong.title) openEditSongDirect(currentPlayingSong.title);
+    if (currentPlayingSong.title) {
+        openEditSongDirect(currentPlayingSong.title);
+    }
 }
 
 async function saveSongFromEditor() {
     const text = document.getElementById("editor-textarea").value.trim();
+
     if (!text) return alert("Please enter song content.");
     if (!window.fbDB) return alert("Firebase is not connected.");
 
@@ -1235,54 +1341,88 @@ async function saveSongFromEditor() {
     const newKey = safeKey(title);
 
     try {
-        await window.fbSet(window.fbRef(window.fbDB, "worship_songs/" + newKey), content);
-        await window.fbSet(window.fbRef(window.fbDB, "worship_song_titles/" + newKey), title);
+        await window.fbSet(
+            window.fbRef(window.fbDB, "worship_songs/" + newKey),
+            content
+        );
+
+        await window.fbSet(
+            window.fbRef(window.fbDB, "worship_song_titles/" + newKey),
+            title
+        );
+
         activeEditingKey = title;
-        currentPlayingSong = { title: title, content: content };
+
+        currentPlayingSong = {
+            title: title,
+            content: content
+        };
+
         document.getElementById("edit-song-title-label").textContent = title;
+
         renderEditScreen();
         switchView("view-edit");
+
         alert("Song saved successfully!");
-    } catch (e) {
-        alert("Error saving song: " + e.message);
+    } catch (error) {
+        alert("Error saving song: " + error.message);
     }
 }
 
 async function deleteCurrentSong() {
     if (!activeEditingKey) return alert("Song not saved yet.");
+
     if (!confirm(`Delete "${activeEditingKey}"?`)) return;
 
     try {
         const key = getSongKey(activeEditingKey);
-        await window.fbRemove(window.fbRef(window.fbDB, "worship_songs/" + key));
-        await window.fbRemove(window.fbRef(window.fbDB, "worship_song_titles/" + key));
+
+        await window.fbRemove(
+            window.fbRef(window.fbDB, "worship_songs/" + key)
+        );
+
+        await window.fbRemove(
+            window.fbRef(window.fbDB, "worship_song_titles/" + key)
+        );
+
         activeEditingKey = null;
         switchView("home");
+
         alert("Song deleted.");
-    } catch (e) {
-        alert("Error deleting song: " + e.message);
+    } catch (error) {
+        alert("Error deleting song: " + error.message);
     }
 }
 
 function renderNewLineUpForm() {
     const container = document.getElementById("new-lineup-selectors");
     if (!container) return;
+
     container.innerHTML = "";
 
     categories.forEach((cat, index) => {
         const div = document.createElement("div");
-        div.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:6px 10px;border-radius:6px;gap:6px;";
+
+        div.style.cssText =
+            "display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:6px 10px;border-radius:6px;gap:6px;";
+
         const label = document.createElement("span");
-        label.style.cssText = "font-size:0.8rem;color:var(--section);font-weight:bold;";
+        label.style.cssText =
+            "font-size:0.8rem;color:var(--section);font-weight:bold;";
+
         label.textContent = "♦️ " + cat + ":";
 
         const select = document.createElement("select");
+
         select.id = "select-new-" + index;
-        select.style.cssText = "background:#1e293b;color:#fff;border:1px solid #334155;padding:4px;border-radius:4px;font-size:0.8rem;width:60%;";
-        
+
+        select.style.cssText =
+            "background:#1e293b;color:#fff;border:1px solid #334155;padding:4px;border-radius:4px;font-size:0.8rem;width:60%;";
+
         const empty = document.createElement("option");
         empty.value = "";
         empty.textContent = "-- Select Song --";
+
         select.appendChild(empty);
 
         Object.keys(songsDatabase).sort().forEach(title => {
@@ -1299,23 +1439,45 @@ function renderNewLineUpForm() {
 
 async function saveNewLineUpFromForm() {
     const wlName = document.getElementById("new-wl-name").value.trim();
+
     if (!wlName) return alert("Please input Worship Leader Name.");
+    if (!window.fbDB) return alert("Firebase is not connected.");
 
     const tempLineup = {};
+
     categories.forEach((cat, index) => {
         const select = document.getElementById("select-new-" + index);
-        if (select && select.value) tempLineup[cat] = select.value;
+
+        if (select && select.value) {
+            tempLineup[cat] = select.value;
+        }
     });
+
+    if (!Object.keys(tempLineup).length) {
+        return alert("Please select at least one song.");
+    }
 
     try {
         const currentLists = Array.isArray(setLists) ? [...setLists] : [];
-        currentLists.unshift({ worshipLeader: wlName, lineup: tempLineup });
-        await window.fbSet(window.fbRef(window.fbDB, "worship_setlists"), currentLists);
+
+        currentLists.unshift({
+            worshipLeader: wlName,
+            lineup: tempLineup,
+            createdAt: Date.now()
+        });
+
+        await window.fbSet(
+            window.fbRef(window.fbDB, "worship_setlists"),
+            currentLists
+        );
+
         document.getElementById("new-wl-name").value = "";
+
         closeDrawer("drawer-newlineup");
+
         alert("New Line-up saved!");
-    } catch (e) {
-        alert("Error saving line-up: " + e.message);
+    } catch (error) {
+        alert("Error saving line-up: " + error.message);
     }
 }
 
@@ -1325,36 +1487,65 @@ function openSaveLineupModal() {
 
 async function confirmSaveActiveLineUp() {
     const wlName = document.getElementById("save-wl-input").value.trim();
+
     if (!wlName) return alert("Enter Worship Leader Name.");
+    if (!window.fbDB) return alert("Firebase is not connected.");
 
     try {
         const currentLists = Array.isArray(setLists) ? [...setLists] : [];
-        currentLists.unshift({ worshipLeader: wlName, lineup: { ...activeLineUp } });
-        await window.fbSet(window.fbRef(window.fbDB, "worship_setlists"), currentLists);
+
+        currentLists.unshift({
+            worshipLeader: wlName,
+            lineup: { ...activeLineUp },
+            createdAt: Date.now()
+        });
+
+        await window.fbSet(
+            window.fbRef(window.fbDB, "worship_setlists"),
+            currentLists
+        );
+
         document.getElementById("save-wl-input").value = "";
         closeModal("save-lineup-modal");
+
         alert("Active Line-up saved!");
-    } catch (e) {
-        alert("Error saving line-up: " + e.message);
+    } catch (error) {
+        alert("Error saving line-up: " + error.message);
     }
 }
 
 function playSong(title) {
-    if (!(title in songsDatabase)) return alert("Song not found.");
-    currentPlayingSong = { title: title, content: songsDatabase[title] };
+    if (!(title in songsDatabase)) {
+        return alert("Song not found.");
+    }
+
+    currentPlayingSong = {
+        title: title,
+        content: songsDatabase[title]
+    };
+
     document.getElementById("play-song-title").textContent = title;
+
     renderPlayScreen();
     switchView("play");
 }
 
 function openQRModal() {
     const localUrl = window.location.href;
+
     document.getElementById("wifi-link-text").textContent = localUrl;
+
     const qr = document.getElementById("qrcode");
     qr.innerHTML = "";
+
     if (typeof QRCode !== "undefined") {
-        new QRCode(qr, { text: localUrl, width: 150, height: 150 });
+        new QRCode(qr, {
+            text: localUrl,
+            width: 150,
+            height: 150
+        });
     }
+
     document.getElementById("qr-modal").style.display = "flex";
 }
 
@@ -1365,20 +1556,28 @@ function openAddCategoryModal() {
 async function confirmAddCategory() {
     const input = document.getElementById("new-cat-input");
     const name = input.value.trim();
+
     if (!name) return;
 
-    if (categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+    if (categories.some(category =>
+        category.toLowerCase() === name.toLowerCase()
+    )) {
         return alert("Category already exists.");
     }
 
     categories.push(name);
+
     try {
-        await window.fbSet(window.fbRef(window.fbDB, "worship_categories"), categories);
+        await window.fbSet(
+            window.fbRef(window.fbDB, "worship_categories"),
+            categories
+        );
+
         input.value = "";
         renderNewLineUpForm();
         closeModal("add-cat-modal");
-    } catch (e) {
-        alert("Error saving category: " + e.message);
+    } catch (error) {
+        alert("Error saving category: " + error.message);
         categories.pop();
     }
 }
