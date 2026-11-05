@@ -398,7 +398,17 @@ header {
     color: var(--highlight);
     border: 2px solid var(--highlight);
 }
+.jumper-section-block {
+    background: transparent;
+    transition: background-color 0.2s ease;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
 
+.jumper-section-block.selected {
+    background: rgba(250, 204, 21, 0.28);
+}
+    
 @media(max-width:480px) {
     .brand-title { font-size: 0.75rem; }
     .toolbar-tools { max-width: 75%; }
@@ -935,7 +945,54 @@ function transposeGlobal(amount) {
     */
 }
 
-/* ORIGINAL TEXT DISPLAY */
+/* SONG SECTION JUMPER */
+
+function detectSongSections(content) {
+    const sections = [];
+
+    const markerPattern =
+        /^[ \t]*#(Intro|Verse(?:[ \t]*\d+)?|Chorus|Bridge|Outro)[ \t]*$/gim;
+
+    let match;
+
+    while ((match = markerPattern.exec(content)) !== null) {
+        sections.push({
+            start: match.index,
+            markerEnd: match.index + match[0].length,
+            label: match[1].trim().toUpperCase()
+        });
+    }
+
+    return sections;
+}
+
+function jumpToSongSection(index) {
+    const box = document.getElementById("play-lyrics-box");
+    const jumper = document.getElementById("floating-jumper-bar");
+
+    if (!box || !jumper) return;
+
+    const blocks = box.querySelectorAll(".jumper-section-block");
+    const buttons = jumper.querySelectorAll(".jumper-chip");
+
+    blocks.forEach(block => block.classList.remove("selected"));
+    buttons.forEach(button => button.classList.remove("selected"));
+
+    const selectedBlock = blocks[index];
+    const selectedButton = buttons[index];
+
+    if (!selectedBlock || !selectedButton) return;
+
+    selectedBlock.classList.add("selected");
+    selectedButton.classList.add("selected");
+
+    selectedBlock.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+}
+
+/* ORIGINAL TEXT DISPLAY + JUMPER */
 
 function renderSongContent(box, jumper, isPlayMode) {
     if (!box) return;
@@ -951,7 +1008,59 @@ function renderSongContent(box, jumper, isPlayMode) {
         getSongFontSize(currentPlayingSong.title)
     );
 
-    box.textContent = currentPlayingSong.content || "";
+    const content = currentPlayingSong.content || "";
+
+    if (!isPlayMode || !jumper) {
+        box.textContent = content;
+        box.scrollTop = 0;
+        return;
+    }
+
+    const sections = detectSongSections(content);
+
+    if (!sections.length) {
+        box.textContent = content;
+        box.scrollTop = 0;
+        return;
+    }
+
+    let previousPosition = 0;
+
+    sections.forEach((section, index) => {
+        // Preserve all text before this section.
+        if (section.start > previousPosition) {
+            box.appendChild(
+                document.createTextNode(
+                    content.slice(previousPosition, section.start)
+                )
+            );
+        }
+
+        const nextPosition = index + 1 < sections.length
+            ? sections[index + 1].start
+            : content.length;
+
+        // Keep the complete original section text unchanged.
+        const block = document.createElement("span");
+        block.className = "jumper-section-block";
+        block.textContent = content.slice(
+            section.start,
+            nextPosition
+        );
+
+        box.appendChild(block);
+
+        // Create one jumper button for this detected section.
+        const button = document.createElement("button");
+        button.className = "jumper-chip";
+        button.textContent = section.label;
+
+        button.onclick = () => jumpToSongSection(index);
+
+        jumper.appendChild(button);
+
+        previousPosition = nextPosition;
+    });
 
     box.scrollTop = 0;
 }
