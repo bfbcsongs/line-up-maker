@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,8 +55,6 @@ try {
     --chord: #4ade80;
     --section: #38bdf8;
     --highlight: #facc15;
-
-    /* Saved song text size */
     --song-font-size: 16px;
 }
 
@@ -170,7 +169,7 @@ header {
     display: flex;
 }
 
-/* HOME SCREEN */
+/* HOME */
 
 #view-home {
     justify-content: center;
@@ -305,7 +304,7 @@ header {
     justify-content: center;
 }
 
-/* ORIGINAL TEXT DISPLAY */
+/* SONG DISPLAY */
 
 .output-box {
     flex: 1;
@@ -324,7 +323,11 @@ header {
     overflow-wrap: break-word;
 }
 
-/* UNIFIED SONG EDITOR */
+/* SONG EDITOR */
+
+#song-editor-workspace {
+    position: relative;
+}
 
 #editor-textarea {
     display: block;
@@ -355,7 +358,100 @@ header {
     text-align: center;
 }
 
-/* FLOATING JUMPER */
+/* COLOR OVERLAY */
+
+#editor-color-overlay {
+    position: absolute;
+    inset: 0;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px 16px;
+    overflow: hidden;
+    pointer-events: none;
+    display: none;
+    z-index: 2;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: var(--song-font-size);
+    line-height: 1.8;
+    text-align: center;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+#editor-color-overlay.active {
+    display: block;
+    pointer-events: auto;
+}
+
+#editor-textarea.color-selecting {
+    color: transparent !important;
+    caret-color: transparent !important;
+    pointer-events: none;
+    user-select: none;
+}
+
+.editor-color-line {
+    display: block;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    min-height: 1.8em;
+    cursor: pointer;
+}
+
+.editor-color-line.green {
+    color: #4ade80;
+}
+
+.editor-color-line.white {
+    color: #ffffff;
+}
+
+/* COMPACT COLOR DRAWER */
+
+.line-color-toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    background: #131b2e;
+    border: 1px solid #334155;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.line-color-toolbar.active {
+    display: flex;
+}
+
+.line-color-btn {
+    width: 34px;
+    height: 32px;
+    border: 1px solid #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    background: #1e293b;
+}
+
+.line-color-btn.selected {
+    outline: 2px solid #facc15;
+    outline-offset: 1px;
+}
+
+.color-tool-toggle.active {
+    background: #475569;
+    border-color: #facc15;
+}
+
+/* JUMPER */
 
 .play-right-bar {
     position: absolute;
@@ -398,6 +494,7 @@ header {
     color: var(--highlight);
     border: 2px solid var(--highlight);
 }
+
 .jumper-section-block {
     background: transparent;
     transition: background-color 0.2s ease;
@@ -408,7 +505,7 @@ header {
 .jumper-section-block.selected {
     background: rgba(250, 204, 21, 0.28);
 }
-    
+
 @media(max-width:480px) {
     .brand-title { font-size: 0.75rem; }
     .toolbar-tools { max-width: 75%; }
@@ -423,109 +520,7 @@ header {
     #editor-textarea {
         padding: 16px 10px;
     }
-}
-    /* MANUAL LINE COLOR TOOL */
 
-#song-editor-workspace {
-    position: relative;
-}
-
-#editor-color-overlay {
-    position: absolute;
-    inset: 0;
-    max-width: 800px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px 16px;
-    overflow: hidden;
-    pointer-events: none;
-    display: none;
-    z-index: 2;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: var(--song-font-size);
-    line-height: 1.8;
-    text-align: center;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-
-#editor-textarea.color-selecting {
-    color: transparent !important;
-    caret-color: transparent !important;
-    pointer-events: none;
-    user-select: none;
-}
-
-#editor-color-overlay.active {
-    display: block;
-    pointer-events: auto;
-}
-
-.editor-color-line {
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    min-height: 1.8em;
-    cursor: pointer;
-}
-
-.editor-color-line.green {
-    color: #4ade80;
-}
-
-.editor-color-line.white {
-    color: #ffffff;
-}
-
-/* COMPACT COLOR TOOLBAR */
-
-.line-color-toolbar {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 20;
-    display: none;
-    align-items: center;
-    gap: 6px;
-    padding: 6px;
-    background: #131b2e;
-    border: 1px solid #334155;
-    border-radius: 9px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
-.line-color-toolbar.active {
-    display: flex;
-}
-
-.line-color-btn {
-    width: 34px;
-    height: 32px;
-    border: 1px solid #64748b;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    background: #1e293b;
-}
-
-.line-color-btn.selected {
-    outline: 2px solid #facc15;
-    outline-offset: 1px;
-}
-
-.line-color-close {
-    background: #334155;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 7px 9px;
-    font-size: 0.72rem;
-    cursor: pointer;
-}
-
-@media(max-width:480px) {
     #editor-color-overlay {
         padding: 16px 10px;
     }
@@ -581,9 +576,10 @@ header {
         </div>
     </div>
 
-    <!-- UNIFIED ADD / EDIT SONG SCREEN -->
+    <!-- ADD / EDIT SONG SCREEN -->
     <div id="view-song-editor" class="view-section">
         <div class="full-screen-container">
+
             <div class="edit-topbar">
                 <button class="btn btn-sm" onclick="goBackFromSongEditor()">⬅ Back</button>
 
@@ -593,6 +589,12 @@ header {
                 </span>
 
                 <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+
+                    <button class="btn btn-sm color-tool-toggle"
+                        id="color-tool-toggle"
+                        onclick="toggleLineColorTool()"
+                        title="Line Colors">🎨</button>
+
                     <button class="btn btn-sm" onclick="changeEditorZoom(-2)">−</button>
 
                     <span id="editor-zoom-label"
@@ -608,36 +610,35 @@ header {
 
             <div class="editor-workspace" id="song-editor-workspace">
 
-    <textarea id="editor-textarea"
-        placeholder="Type or paste lyrics and chords here..."></textarea>
+                <textarea id="editor-textarea"
+                    placeholder="Type or paste lyrics and chords here..."></textarea>
 
-    <div id="editor-color-overlay"></div>
+                <div id="editor-color-overlay"></div>
 
-    <div id="line-color-toolbar" class="line-color-toolbar">
+                <!-- TWO-COLOR TOOLBAR -->
+                <div id="line-color-toolbar" class="line-color-toolbar">
 
-        <button class="line-color-btn"
-            id="green-line-btn"
-            style="color:#4ade80;"
-            onclick="selectLineColor('green')"
-            title="Green">
-            🟢
-        </button>
+                    <button class="line-color-btn"
+                        id="green-line-btn"
+                        style="color:#4ade80;"
+                        onclick="selectLineColor('green')"
+                        title="Green">
+                        🟢
+                    </button>
 
-        <button class="line-color-btn"
-            id="white-line-btn"
-            style="color:#ffffff;"
-            onclick="selectLineColor('white')"
-            title="White">
-            ⚪
-        </button>
+                    <button class="line-color-btn"
+                        id="white-line-btn"
+                        style="color:#ffffff;"
+                        onclick="selectLineColor('white')"
+                        title="White">
+                        ⚪
+                    </button>
 
-        <button class="line-color-close"
-            onclick="closeLineColorTool()">
-            Close
-        </button>
+                </div>
 
+            </div>
+        </div>
     </div>
-</div>
 
     <!-- PLAY -->
     <div id="view-play" class="view-section">
@@ -662,9 +663,7 @@ header {
     <div class="drawer-panel" onclick="event.stopPropagation()">
         <h3 style="font-size:0.95rem;color:var(--accent);">Add Song</h3>
 
-        <input
-            type="text"
-            id="new-song-title-input"
+        <input type="text" id="new-song-title-input"
             placeholder="Enter Song Title..."
             autocomplete="off"
             style="background:#0f172a;border:1px solid #334155;color:#fff;padding:10px;border-radius:6px;font-size:0.9rem;width:100%;">
@@ -772,7 +771,7 @@ let songKeys = {};
 let songTitles = {};
 let setLists = [];
 
-/* SONG ZOOM SETTINGS */
+/* ZOOM */
 
 let songZoomLevels = {};
 let currentSongFontSize = 16;
@@ -789,10 +788,18 @@ let activeCategoryToAssign = null;
 let viewHistory = ["home"];
 let pendingSetListIndex = null;
 
-/* ADD SONG STATE */
+/* ADD SONG */
 
 let newSongTitle = "";
 let isNewSongDraft = false;
+
+/* LINE COLORS */
+
+let songLineColors = {};
+let currentLineColors = {};
+let activeLineColor = null;
+let lineColorToolOpen = false;
+let lineColorsDirty = false;
 
 const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 let firebaseInitialized = false;
@@ -836,18 +843,32 @@ function initializeFirebase() {
         }).catch(console.error);
     });
 
-    /* LOAD SAVED FONT SIZES */
+    /* LOAD ZOOM */
 
     window.fbOnValue(window.fbRef(window.fbDB, "worship_song_zoom"), snapshot => {
         songZoomLevels = snapshot.val() || {};
 
         if (currentPlayingSong.title) {
             const savedSize = getSongFontSize(currentPlayingSong.title);
-
             currentPlayingSong.fontSize = savedSize;
 
             if (viewHistory[viewHistory.length - 1] !== "song-editor") {
                 applySongFontSize(savedSize);
+            }
+        }
+    });
+
+    /* LOAD LINE COLORS */
+
+    window.fbOnValue(window.fbRef(window.fbDB, "worship_song_line_colors"), snapshot => {
+        songLineColors = snapshot.val() || {};
+
+        if (currentPlayingSong.title && !lineColorsDirty) {
+            const key = getSongKey(currentPlayingSong.title);
+            currentLineColors = { ...(songLineColors[key] || {}) };
+
+            if (lineColorToolOpen) {
+                renderColorOverlay();
             }
         }
     });
@@ -895,7 +916,7 @@ function getSongKey(title) {
     return songKeys[title] || safeKey(title);
 }
 
-/* SONG ZOOM FUNCTIONS */
+/* ZOOM FUNCTIONS */
 
 function clampSongFontSize(size) {
     return Math.max(
@@ -929,6 +950,10 @@ function applySongFontSize(size) {
 
     if (label) {
         label.textContent = currentSongFontSize + "px";
+    }
+
+    if (lineColorToolOpen) {
+        renderColorOverlay();
     }
 }
 
@@ -970,6 +995,8 @@ function switchView(viewName, pushHistory = true) {
 }
 
 function goBack() {
+    closeLineColorTool();
+
     if (viewHistory.length > 1) {
         viewHistory.pop();
         switchView(viewHistory[viewHistory.length - 1], false);
@@ -1009,7 +1036,7 @@ function closeModal(modalId) {
     if (modal) modal.style.display = "none";
 }
 
-/* ADD SONG TITLE MODAL */
+/* ADD SONG TITLE */
 
 function openAddSongModal() {
     document.getElementById("new-song-title-input").value = "";
@@ -1049,6 +1076,15 @@ function confirmAddSongTitle() {
     isNewSongDraft = true;
     activeEditingKey = null;
 
+    currentPlayingSong = {
+        title: title,
+        content: "",
+        fontSize: DEFAULT_SONG_FONT_SIZE
+    };
+
+    currentLineColors = {};
+    lineColorsDirty = false;
+
     currentSongFontSize = DEFAULT_SONG_FONT_SIZE;
     applySongFontSize(DEFAULT_SONG_FONT_SIZE);
 
@@ -1056,6 +1092,7 @@ function confirmAddSongTitle() {
     document.getElementById("song-editor-heading").textContent =
         "Add Song Lyrics";
 
+    closeLineColorTool();
     closeAddSongTitleModal();
 
     switchView("view-song-editor");
@@ -1070,11 +1107,172 @@ function transposeGlobal(amount) {
 
     document.getElementById("trans-val").innerText =
         globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
+}
 
-    /*
-       Original text is displayed unchanged.
-       Transpose does not modify saved or displayed lyrics.
-    */
+/* LINE COLOR TOOL */
+
+function toggleLineColorTool() {
+    if (lineColorToolOpen) {
+        closeLineColorTool();
+    } else {
+        openLineColorTool();
+    }
+}
+
+function openLineColorTool() {
+    const editor = document.getElementById("editor-textarea");
+    const overlay = document.getElementById("editor-color-overlay");
+    const toolbar = document.getElementById("line-color-toolbar");
+    const toggle = document.getElementById("color-tool-toggle");
+
+    if (!editor || !overlay || !toolbar) return;
+
+    lineColorToolOpen = true;
+    activeLineColor = null;
+
+    editor.classList.add("color-selecting");
+    overlay.classList.add("active");
+    toolbar.classList.add("active");
+
+    if (toggle) toggle.classList.add("active");
+
+    renderColorOverlay();
+    updateColorButtons();
+}
+
+function closeLineColorTool() {
+    lineColorToolOpen = false;
+    activeLineColor = null;
+
+    const editor = document.getElementById("editor-textarea");
+    const overlay = document.getElementById("editor-color-overlay");
+    const toolbar = document.getElementById("line-color-toolbar");
+    const toggle = document.getElementById("color-tool-toggle");
+
+    if (editor) editor.classList.remove("color-selecting");
+    if (overlay) overlay.classList.remove("active");
+    if (toolbar) toolbar.classList.remove("active");
+    if (toggle) toggle.classList.remove("active");
+
+    updateColorButtons();
+}
+
+function selectLineColor(color) {
+    if (color !== "green" && color !== "white") return;
+
+    activeLineColor = color;
+
+    updateColorButtons();
+}
+
+function updateColorButtons() {
+    const green = document.getElementById("green-line-btn");
+    const white = document.getElementById("white-line-btn");
+
+    if (green) {
+        green.classList.toggle("selected", activeLineColor === "green");
+    }
+
+    if (white) {
+        white.classList.toggle("selected", activeLineColor === "white");
+    }
+}
+
+function renderColorOverlay() {
+    const editor = document.getElementById("editor-textarea");
+    const overlay = document.getElementById("editor-color-overlay");
+
+    if (!editor || !overlay) return;
+
+    const scrollPosition = editor.scrollTop;
+    const lines = editor.value.split("\n");
+
+    overlay.innerHTML = "";
+
+    lines.forEach((line, index) => {
+        const lineElement = document.createElement("div");
+
+        lineElement.className = "editor-color-line";
+
+        const color = currentLineColors[index];
+
+        if (color === "green" || color === "white") {
+            lineElement.classList.add(color);
+        }
+
+        // Zero-width character keeps blank lines clickable
+        // without changing their visible text.
+        lineElement.textContent = line.length ? line : "\u200b";
+
+        lineElement.dataset.lineIndex = index;
+
+        lineElement.addEventListener("click", () => {
+            applyLineColor(index);
+        });
+
+        overlay.appendChild(lineElement);
+    });
+
+    overlay.scrollTop = scrollPosition;
+}
+
+function applyLineColor(index) {
+    if (!lineColorToolOpen || !activeLineColor) return;
+
+    currentLineColors[index] = activeLineColor;
+    lineColorsDirty = true;
+
+    renderColorOverlay();
+}
+
+function initializeColorEditor() {
+    const editor = document.getElementById("editor-textarea");
+    const overlay = document.getElementById("editor-color-overlay");
+
+    if (!editor || !overlay) return;
+
+    editor.addEventListener("scroll", () => {
+        if (lineColorToolOpen) {
+            overlay.scrollTop = editor.scrollTop;
+        }
+    });
+
+    editor.addEventListener("input", () => {
+        if (lineColorToolOpen) {
+            renderColorOverlay();
+        }
+    });
+}
+
+/* COLORED TEXT RENDERING */
+
+function appendColoredText(parent, text, absoluteStart) {
+    const fullContent = currentPlayingSong.content || "";
+
+    let lineIndex = fullContent
+        .slice(0, absoluteStart)
+        .split("\n").length - 1;
+
+    const lines = text.split("\n");
+
+    lines.forEach((line, index) => {
+        if (line.length) {
+            const color = currentLineColors[lineIndex + index];
+
+            if (color === "green" || color === "white") {
+                const span = document.createElement("span");
+                span.style.color = color === "green" ? "#4ade80" : "#ffffff";
+                span.textContent = line;
+                parent.appendChild(span);
+            } else {
+                parent.appendChild(document.createTextNode(line));
+            }
+        }
+
+        if (index < lines.length - 1) {
+            parent.appendChild(document.createTextNode("\n"));
+        }
+    });
 }
 
 /* SONG SECTION JUMPER */
@@ -1124,7 +1322,7 @@ function jumpToSongSection(index) {
     });
 }
 
-/* ORIGINAL TEXT DISPLAY + JUMPER */
+/* SONG DISPLAY */
 
 function renderSongContent(box, jumper, isPlayMode) {
     if (!box) return;
@@ -1143,7 +1341,7 @@ function renderSongContent(box, jumper, isPlayMode) {
     const content = currentPlayingSong.content || "";
 
     if (!isPlayMode || !jumper) {
-        box.textContent = content;
+        appendColoredText(box, content, 0);
         box.scrollTop = 0;
         return;
     }
@@ -1151,7 +1349,7 @@ function renderSongContent(box, jumper, isPlayMode) {
     const sections = detectSongSections(content);
 
     if (!sections.length) {
-        box.textContent = content;
+        appendColoredText(box, content, 0);
         box.scrollTop = 0;
         return;
     }
@@ -1159,12 +1357,12 @@ function renderSongContent(box, jumper, isPlayMode) {
     let previousPosition = 0;
 
     sections.forEach((section, index) => {
-        // Preserve all text before this section.
+
         if (section.start > previousPosition) {
-            box.appendChild(
-                document.createTextNode(
-                    content.slice(previousPosition, section.start)
-                )
+            appendColoredText(
+                box,
+                content.slice(previousPosition, section.start),
+                previousPosition
             );
         }
 
@@ -1172,21 +1370,20 @@ function renderSongContent(box, jumper, isPlayMode) {
             ? sections[index + 1].start
             : content.length;
 
-        // Keep the complete original section text unchanged.
         const block = document.createElement("span");
         block.className = "jumper-section-block";
-        block.textContent = content.slice(
-            section.start,
-            nextPosition
+
+        appendColoredText(
+            block,
+            content.slice(section.start, nextPosition),
+            section.start
         );
 
         box.appendChild(block);
 
-        // Create one jumper button for this detected section.
         const button = document.createElement("button");
         button.className = "jumper-chip";
         button.textContent = section.label;
-
         button.onclick = () => jumpToSongSection(index);
 
         jumper.appendChild(button);
@@ -1301,6 +1498,7 @@ function renderSetList() {
 
             try {
                 setLists.splice(sl.originalIndex, 1);
+
                 await window.fbSet(
                     window.fbRef(window.fbDB, "worship_setlists"),
                     setLists
@@ -1383,6 +1581,12 @@ function playLineUpSongAt(index) {
         fontSize: getSongFontSize(title)
     };
 
+    currentLineColors = {
+        ...(songLineColors[getSongKey(title)] || {})
+    };
+
+    lineColorsDirty = false;
+
     document.getElementById("play-song-title").textContent =
         category + " — " + title;
 
@@ -1455,6 +1659,14 @@ function openEditSongDirect(title) {
         fontSize: getSongFontSize(title)
     };
 
+    currentLineColors = {
+        ...(songLineColors[getSongKey(title)] || {})
+    };
+
+    lineColorsDirty = false;
+
+    closeLineColorTool();
+
     applySongFontSize(currentPlayingSong.fontSize);
 
     document.getElementById("edit-song-title-label").textContent = title;
@@ -1481,6 +1693,8 @@ function openFullEditor() {
     document.getElementById("editor-textarea").value =
         currentPlayingSong.content || "";
 
+    closeLineColorTool();
+
     switchView("view-song-editor");
 
     document.getElementById("editor-textarea").focus();
@@ -1502,6 +1716,8 @@ function openPlayToEdit() {
     document.getElementById("editor-textarea").value =
         currentPlayingSong.content || "";
 
+    closeLineColorTool();
+
     switchView("view-song-editor");
 
     document.getElementById("editor-textarea").focus();
@@ -1511,7 +1727,6 @@ function openPlayToEdit() {
 
 async function saveSongFromEditor() {
 
-    // Preserve the complete text exactly as entered.
     const content = document.getElementById("editor-textarea").value;
 
     if (!content.trim()) {
@@ -1542,7 +1757,7 @@ async function saveSongFromEditor() {
     const fontSizeToSave = clampSongFontSize(currentSongFontSize);
 
     try {
-        // Save original lyrics without modifying their content.
+        // Save lyrics exactly as entered.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_songs/" + newKey),
             content
@@ -1553,13 +1768,31 @@ async function saveSongFromEditor() {
             title
         );
 
-        // Save this song's zoom level separately.
+        // Save zoom separately.
         await window.fbSet(
             window.fbRef(window.fbDB, "worship_song_zoom/" + newKey),
             fontSizeToSave
         );
 
         songZoomLevels[newKey] = fontSizeToSave;
+
+        // Save line colors separately from the original lyrics.
+        if (Object.keys(currentLineColors).length) {
+            await window.fbSet(
+                window.fbRef(window.fbDB, "worship_song_line_colors/" + newKey),
+                currentLineColors
+            );
+
+            songLineColors[newKey] = { ...currentLineColors };
+        } else {
+            await window.fbRemove(
+                window.fbRef(window.fbDB, "worship_song_line_colors/" + newKey)
+            );
+
+            delete songLineColors[newKey];
+        }
+
+        lineColorsDirty = false;
 
         activeEditingKey = title;
         isNewSongDraft = false;
@@ -1572,6 +1805,7 @@ async function saveSongFromEditor() {
         };
 
         applySongFontSize(fontSizeToSave);
+        closeLineColorTool();
 
         document.getElementById("edit-song-title-label").textContent = title;
         document.getElementById("play-song-title").textContent = title;
@@ -1610,12 +1844,22 @@ async function deleteCurrentSong() {
             window.fbRef(window.fbDB, "worship_song_titles/" + key)
         );
 
-        // Remove the associated zoom setting too.
         await window.fbRemove(
             window.fbRef(window.fbDB, "worship_song_zoom/" + key)
         );
 
+        // Also remove saved line-color formatting.
+        await window.fbRemove(
+            window.fbRef(window.fbDB, "worship_song_line_colors/" + key)
+        );
+
         delete songZoomLevels[key];
+        delete songLineColors[key];
+
+        currentLineColors = {};
+        lineColorsDirty = false;
+
+        closeLineColorTool();
 
         activeEditingKey = null;
         currentPlayingSong = { title: "", content: "", fontSize: 16 };
@@ -1764,6 +2008,12 @@ function playSong(title) {
         fontSize: getSongFontSize(title)
     };
 
+    currentLineColors = {
+        ...(songLineColors[getSongKey(title)] || {})
+    };
+
+    lineColorsDirty = false;
+
     document.getElementById("play-song-title").textContent = title;
 
     renderPlayScreen();
@@ -1833,6 +2083,8 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSetList();
 
     applySongFontSize(DEFAULT_SONG_FONT_SIZE);
+
+    initializeColorEditor();
 
     document.getElementById("new-song-title-input")
         .addEventListener("keydown", event => {
