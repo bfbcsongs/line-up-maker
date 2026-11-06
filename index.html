@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -379,13 +380,11 @@ header {
     overflow-wrap: break-word;
 }
 
-/* Colored text remains visible in normal Edit Mode. */
 #editor-textarea.color-mirror {
     color: transparent !important;
     caret-color: var(--text-main);
 }
 
-/* Coloring Mode: overlay becomes the scrollable surface. */
 #editor-color-overlay.active {
     overflow-y: auto;
     pointer-events: auto;
@@ -415,6 +414,27 @@ header {
 
 .editor-color-line.white {
     color: #ffffff;
+}
+
+/* AUTOMATIC CHORD COLOR */
+
+.chord-text {
+    color: #4ade80;
+}
+
+/* EDITOR TRANSPOSE CONTROLS */
+
+.editor-transpose-tools {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.editor-transpose-tools .btn {
+    min-width: 27px;
+    padding: 4px 6px;
+    font-weight: bold;
 }
 
 /* COMPACT COLOR DRAWER */
@@ -516,6 +536,49 @@ header {
     background: rgba(250, 204, 21, 0.28);
 }
 
+/* CATEGORY PICKER */
+
+.category-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.category-picker-item {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 11px 12px;
+    background: #0f172a;
+    color: #fff;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.category-picker-item:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.category-picker-name {
+    color: var(--section);
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.category-picker-song {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
 @media(max-width:480px) {
     .brand-title { font-size: 0.75rem; }
     .toolbar-tools { max-width: 75%; }
@@ -599,6 +662,17 @@ header {
                 </span>
 
                 <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+
+                    <!-- EDITOR TRANSPOSE -->
+                    <div class="editor-transpose-tools">
+                        <button class="btn btn-sm"
+                            onclick="transposeEditor(-1)"
+                            title="Transpose down one semitone">−</button>
+
+                        <button class="btn btn-sm"
+                            onclick="transposeEditor(1)"
+                            title="Transpose up one semitone">+</button>
+                    </div>
 
                     <button class="btn btn-sm color-tool-toggle"
                         id="color-tool-toggle"
@@ -741,6 +815,18 @@ header {
     </div>
 </div>
 
+<!-- CATEGORY-FIRST PLAYBACK PICKER -->
+<div id="category-picker-modal" class="drawer-overlay">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+        <h3 style="color:var(--section);font-size:0.95rem;">Select Song Category</h3>
+        <p style="color:var(--text-muted);font-size:0.75rem;">
+            Choose a category to begin playback.
+        </p>
+        <div id="category-picker-list" class="category-picker-list"></div>
+        <button class="btn" onclick="closeModal('category-picker-modal')">Cancel</button>
+    </div>
+</div>
+
 <!-- SAVE ACTIVE LINEUP -->
 <div id="save-lineup-modal" class="drawer-overlay" onclick="closeModal('save-lineup-modal')">
     <div class="drawer-panel" onclick="event.stopPropagation()">
@@ -812,6 +898,8 @@ let lineColorToolOpen = false;
 let lineColorsDirty = false;
 
 const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const notesFlat = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+
 let firebaseInitialized = false;
 
 window.addEventListener("firebase-ready", initializeFirebase);
@@ -1121,6 +1209,181 @@ function transposeGlobal(amount) {
         globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
 }
 
+/*
+   CHORD RECOGNITION
+
+   Chords are recognized only on separate chord lines.
+   This avoids accidentally changing ordinary lyric words.
+
+   Supported examples:
+   C, D, F#, Bb, Am, Dm7, G7, Cmaj7,
+   Asus4, Cadd9, F#m7b5, G/B, D/F#
+*/
+
+function parseChordToken(token) {
+    if (!token || token.includes("|")) return null;
+
+    const parts = token.split("/");
+
+    if (parts.length > 2) return null;
+
+    const rootMatch = parts[0].match(/^([A-G])([#b]?)(.*)$/);
+
+    if (!rootMatch) return null;
+
+    const suffix = rootMatch[3];
+
+    const suffixPattern =
+        /^(?:(?:maj|min|dim|aug|sus|add|no|m|M|ø|°|\+|-)?(?:[0-9]+)?(?:sus[0-9]+)?(?:add[0-9]+)?(?:b[0-9]+|#[0-9]+)*(?:\([^)]*\))?)?$/i;
+
+    if (!suffixPattern.test(suffix)) return null;
+
+    let bass = null;
+
+    if (parts.length === 2) {
+        const bassMatch = parts[1].match(/^([A-G])([#b]?)$/);
+
+        if (!bassMatch) return null;
+
+        bass = {
+            letter: bassMatch[1],
+            accidental: bassMatch[2]
+        };
+    }
+
+    return {
+        root: {
+            letter: rootMatch[1],
+            accidental: rootMatch[2]
+        },
+        suffix: suffix,
+        bass: bass
+    };
+}
+
+function isChordLine(line) {
+    const trimmed = line.trim();
+
+    if (!trimmed) return false;
+
+    const tokens = trimmed.split(/\s+/);
+
+    return tokens.length > 0 &&
+        tokens.every(token => parseChordToken(token) !== null);
+}
+
+function getNoteIndex(letter, accidental) {
+    const note = letter + accidental;
+
+    const enharmonicMap = {
+        "Db": "C#",
+        "Eb": "D#",
+        "Gb": "F#",
+        "Ab": "G#",
+        "Bb": "A#",
+        "Cb": "B",
+        "Fb": "E",
+        "E#": "F",
+        "B#": "C"
+    };
+
+    const normalized = enharmonicMap[note] || note;
+
+    return notesSharp.indexOf(normalized);
+}
+
+function transposeNote(letter, accidental, amount) {
+    const currentIndex = getNoteIndex(letter, accidental);
+
+    if (currentIndex < 0) {
+        return letter + accidental;
+    }
+
+    const newIndex = (currentIndex + amount % 12 + 12) % 12;
+
+    // Retain flat spelling when the original note used a flat.
+    const useFlats = accidental === "b";
+
+    return useFlats ? notesFlat[newIndex] : notesSharp[newIndex];
+}
+
+function transposeChordToken(token, amount) {
+    const parsed = parseChordToken(token);
+
+    if (!parsed) return token;
+
+    const newRoot = transposeNote(
+        parsed.root.letter,
+        parsed.root.accidental,
+        amount
+    );
+
+    let newBass = "";
+
+    if (parsed.bass) {
+        newBass = "/" + transposeNote(
+            parsed.bass.letter,
+            parsed.bass.accidental,
+            amount
+        );
+    }
+
+    return newRoot + parsed.suffix + newBass;
+}
+
+function transposeChordLine(line, amount) {
+    return line.replace(/\S+/g, token =>
+        transposeChordToken(token, amount)
+    );
+}
+
+function transposeEditor(amount) {
+    if (lineColorToolOpen) {
+        closeLineColorTool();
+    }
+
+    const editor = document.getElementById("editor-textarea");
+
+    if (!editor) return;
+
+    const original = editor.value;
+    const selectionStart = editor.selectionStart;
+    const selectionEnd = editor.selectionEnd;
+    const scrollTop = editor.scrollTop;
+    const scrollLeft = editor.scrollLeft;
+
+    const lines = original.split("\n");
+
+    const updatedLines = lines.map(line => {
+        if (!isChordLine(line)) return line;
+
+        return transposeChordLine(line, amount);
+    });
+
+    const updated = updatedLines.join("\n");
+
+    if (updated === original) {
+        alert("No chord lines were detected to transpose.");
+        return;
+    }
+
+    editor.value = updated;
+
+    // Keep the cursor and scroll position stable.
+    editor.setSelectionRange(
+        Math.min(selectionStart, updated.length),
+        Math.min(selectionEnd, updated.length)
+    );
+
+    editor.scrollTop = scrollTop;
+    editor.scrollLeft = scrollLeft;
+
+    renderColorOverlay();
+
+    // The editor content is now the transposed content.
+    // It will be saved normally when Save is tapped.
+}
+
 /* LINE COLOR TOOL */
 
 function toggleLineColorTool() {
@@ -1199,6 +1462,56 @@ function updateColorButtons() {
     }
 }
 
+/* CHORD-AWARE LINE RENDERING */
+
+function appendLineContent(parent, line, manualColor) {
+    // Manual whole-line color takes priority over automatic chord color.
+    if (manualColor === "green" || manualColor === "white") {
+        const span = document.createElement("span");
+        span.style.color = manualColor === "green" ? "#4ade80" : "#ffffff";
+        span.textContent = line.length ? line : "\u200b";
+        parent.appendChild(span);
+        return;
+    }
+
+    // Only recognize chords when the entire line contains chord tokens.
+    if (!isChordLine(line)) {
+        parent.appendChild(
+            document.createTextNode(line.length ? line : "\u200b")
+        );
+        return;
+    }
+
+    // Preserve every space between chord symbols.
+    const tokenPattern = /\S+/g;
+    let previousPosition = 0;
+    let match;
+
+    while ((match = tokenPattern.exec(line)) !== null) {
+        if (match.index > previousPosition) {
+            parent.appendChild(
+                document.createTextNode(
+                    line.slice(previousPosition, match.index)
+                )
+            );
+        }
+
+        const chordSpan = document.createElement("span");
+        chordSpan.className = "chord-text";
+        chordSpan.textContent = match[0];
+
+        parent.appendChild(chordSpan);
+
+        previousPosition = match.index + match[0].length;
+    }
+
+    if (previousPosition < line.length) {
+        parent.appendChild(
+            document.createTextNode(line.slice(previousPosition))
+        );
+    }
+}
+
 function renderColorOverlay() {
     const editor = document.getElementById("editor-textarea");
     const overlay = document.getElementById("editor-color-overlay");
@@ -1224,7 +1537,8 @@ function renderColorOverlay() {
             lineElement.classList.add(color);
         }
 
-        lineElement.textContent = line.length ? line : "\u200b";
+        appendLineContent(lineElement, line, color);
+
         lineElement.dataset.lineIndex = index;
 
         lineElement.addEventListener("click", () => {
@@ -1258,22 +1572,18 @@ function initializeColorEditor() {
 
     if (!editor || !overlay) return;
 
-    // Keep the colored overlay visible in normal Edit Mode.
     editor.classList.add("color-mirror");
 
-    // Refresh the overlay whenever lyrics are typed or pasted.
     editor.addEventListener("input", () => {
         renderColorOverlay();
     });
 
-    // Normal Edit Mode: textarea controls scrolling.
     editor.addEventListener("scroll", () => {
         if (!lineColorToolOpen) {
             overlay.scrollTop = editor.scrollTop;
         }
     });
 
-    // Coloring Mode: overlay controls scrolling.
     overlay.addEventListener("scroll", () => {
         if (lineColorToolOpen) {
             editor.scrollTop = overlay.scrollTop;
@@ -1293,18 +1603,11 @@ function appendColoredText(parent, text, absoluteStart) {
     const lines = text.split("\n");
 
     lines.forEach((line, index) => {
-        if (line.length) {
-            const color = currentLineColors[lineIndex + index];
-
-            if (color === "green" || color === "white") {
-                const span = document.createElement("span");
-                span.style.color = color === "green" ? "#4ade80" : "#ffffff";
-                span.textContent = line;
-                parent.appendChild(span);
-            } else {
-                parent.appendChild(document.createTextNode(line));
-            }
-        }
+        appendLineContent(
+            parent,
+            line,
+            currentLineColors[lineIndex + index]
+        );
 
         if (index < lines.length - 1) {
             parent.appendChild(document.createTextNode("\n"));
@@ -1553,6 +1856,8 @@ function renderSetList() {
     });
 }
 
+/* LOAD SET LIST AND SHOW CATEGORIES FIRST */
+
 function confirmLoadSetList() {
     if (pendingSetListIndex === null) return;
 
@@ -1597,7 +1902,57 @@ function playLineUp() {
 
     if (!playLineUpEntries.length) return;
 
-    playLineUpSongAt(0);
+    renderCategoryPicker();
+    document.getElementById("category-picker-modal").style.display = "flex";
+}
+
+function renderCategoryPicker() {
+    const container = document.getElementById("category-picker-list");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    // Show every category, including categories without an assigned song.
+    // Include any saved custom category that is not currently in the category list.
+    const allCategories = [
+        ...categories,
+        ...Object.keys(activeLineUp).filter(cat => !categories.includes(cat))
+    ];
+
+    allCategories.forEach(category => {
+        const assignedSong = activeLineUp[category] || "";
+        const hasSong = Boolean(assignedSong);
+
+        const button = document.createElement("button");
+        button.className = "category-picker-item";
+        button.disabled = !hasSong;
+
+        const name = document.createElement("span");
+        name.className = "category-picker-name";
+        name.textContent = "♦️ " + category;
+
+        const song = document.createElement("span");
+        song.className = "category-picker-song";
+        song.textContent = hasSong ? assignedSong : "No song assigned";
+
+        button.append(name, song);
+
+        if (hasSong) {
+            button.onclick = () => {
+                const selectedIndex = playLineUpEntries.findIndex(
+                    entry => entry[0] === category
+                );
+
+                if (selectedIndex < 0) return;
+
+                closeModal("category-picker-modal");
+                playLineUpSongAt(selectedIndex);
+            };
+        }
+
+        container.appendChild(button);
+    });
 }
 
 function playLineUpSongAt(index) {
@@ -1889,7 +2244,6 @@ async function deleteCurrentSong() {
             window.fbRef(window.fbDB, "worship_song_zoom/" + key)
         );
 
-        // Also remove saved line-color formatting.
         await window.fbRemove(
             window.fbRef(window.fbDB, "worship_song_line_colors/" + key)
         );
