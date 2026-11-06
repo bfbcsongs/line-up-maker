@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -884,6 +883,11 @@ let activeCategoryToAssign = null;
 let viewHistory = ["home"];
 let pendingSetListIndex = null;
 
+/* BACK NAVIGATION CONTROL */
+
+let allowBrowserExit = false;
+let browserBackGuardInstalled = false;
+
 /* ADD SONG */
 
 let newSongTitle = "";
@@ -1092,14 +1096,32 @@ function switchView(viewName, pushHistory = true) {
     }
 }
 
-function goBack() {
+/* BACK NAVIGATION */
+
+function goBack(fromSystemBack = false) {
     closeLineColorTool();
 
+    // If there is a previous screen, return to it.
     if (viewHistory.length > 1) {
         viewHistory.pop();
         switchView(viewHistory[viewHistory.length - 1], false);
-    } else {
-        switchView("home", false);
+        return;
+    }
+
+    // At Home: always ask before leaving the app.
+    const confirmed = window.confirm(
+        "Are you sure you want to leave Line-up Maker?"
+    );
+
+    if (!confirmed) return;
+
+    // Allow the browser or phone to leave only after confirmation.
+    allowBrowserExit = true;
+
+    // For the app's own Back button, trigger the same browser exit
+    // that the Android/browser Back button would perform.
+    if (!fromSystemBack) {
+        window.history.back();
     }
 }
 
@@ -1113,6 +1135,40 @@ function goBackFromPlay() {
 
 function goBackFromSongEditor() {
     goBack();
+}
+
+/* ANDROID / BROWSER BACK BUTTON */
+
+function installBrowserBackGuard() {
+    if (browserBackGuardInstalled) return;
+
+    browserBackGuardInstalled = true;
+
+    // Create a history entry so the phone's Back button
+    // can be intercepted before leaving the app.
+    window.history.pushState(
+        { lineUpMakerBackGuard: true },
+        "",
+        window.location.href
+    );
+
+    window.addEventListener("popstate", () => {
+
+        // Exit was already confirmed through the app's Back button.
+        if (allowBrowserExit) return;
+
+        // Use exactly the same navigation function as the app Back button.
+        goBack(true);
+
+        // If exit was not confirmed, keep the app in the browser history.
+        if (!allowBrowserExit) {
+            window.history.pushState(
+                { lineUpMakerBackGuard: true },
+                "",
+                window.location.href
+            );
+        }
+    });
 }
 
 function openDrawer(drawerId) {
@@ -1365,7 +1421,7 @@ function transposeEditor(amount) {
 
     renderColorOverlay();
 }
-    
+
 function transposeSongContent(content, amount) {
     if (!amount) return content;
 
@@ -1672,9 +1728,10 @@ function renderSongContent(box, jumper, isPlayMode) {
 
     const originalContent = currentPlayingSong.content || "";
 
-const content = isPlayMode
-    ? transposeSongContent(originalContent, globalSemitones)
-    : originalContent;
+    const content = isPlayMode
+        ? transposeSongContent(originalContent, globalSemitones)
+        : originalContent;
+
     if (!isPlayMode || !jumper) {
         appendColoredText(box, content, 0);
         box.scrollTop = 0;
@@ -2475,6 +2532,9 @@ document.addEventListener("DOMContentLoaded", () => {
     applySongFontSize(DEFAULT_SONG_FONT_SIZE);
 
     initializeColorEditor();
+
+    // Install Android/browser Back button handling.
+    installBrowserBackGuard();
 
     document.getElementById("new-song-title-input")
         .addEventListener("keydown", event => {
