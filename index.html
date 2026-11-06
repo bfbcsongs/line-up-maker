@@ -367,9 +367,10 @@ header {
     width: 100%;
     margin: 0 auto;
     padding: 20px 16px;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden;
     pointer-events: none;
-    display: none;
+    display: block;
     z-index: 2;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: var(--song-font-size);
@@ -379,9 +380,16 @@ header {
     overflow-wrap: break-word;
 }
 
+#editor-textarea.color-mirror {
+    color: transparent !important;
+    caret-color: var(--text-main);
+}
+
 #editor-color-overlay.active {
-    display: block;
+    overflow-y: auto;
     pointer-events: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
 
 #editor-textarea.color-selecting {
@@ -397,6 +405,7 @@ header {
     overflow-wrap: break-word;
     min-height: 1.8em;
     cursor: pointer;
+    touch-action: pan-y;
 }
 
 .editor-color-line.green {
