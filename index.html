@@ -1145,9 +1145,10 @@ function openLineColorTool() {
 
     if (toggle) toggle.classList.add("active");
 
-    renderColorOverlay();
-    updateColorButtons();
-}
+    overlay.scrollTop = editor.scrollTop;
+
+renderColorOverlay();
+updateColorButtons();
 
 function closeLineColorTool() {
     lineColorToolOpen = false;
