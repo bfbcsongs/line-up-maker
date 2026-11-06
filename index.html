@@ -1101,27 +1101,29 @@ function switchView(viewName, pushHistory = true) {
 function goBack(fromSystemBack = false) {
     closeLineColorTool();
 
-    // If there is a previous screen, return to it.
+    // Return to the immediately previous app screen.
     if (viewHistory.length > 1) {
         viewHistory.pop();
         switchView(viewHistory[viewHistory.length - 1], false);
         return;
     }
 
-    // At Home: always ask before leaving the app.
+    // At Home, always ask before leaving.
     const confirmed = window.confirm(
         "Are you sure you want to leave Line-up Maker?"
     );
 
     if (!confirmed) return;
 
-    // Allow the browser or phone to leave only after confirmation.
     allowBrowserExit = true;
 
-    // For the app's own Back button, trigger the same browser exit
-    // that the Android/browser Back button would perform.
-    if (!fromSystemBack) {
+    if (fromSystemBack) {
+        // Android Back already consumed the guard entry.
+        // Go back once more to leave the page.
         window.history.back();
+    } else {
+        // App Back must skip both the guard and current page entry.
+        window.history.go(-2);
     }
 }
 
@@ -1137,15 +1139,14 @@ function goBackFromSongEditor() {
     goBack();
 }
 
-/* ANDROID / BROWSER BACK BUTTON */
+/* ANDROID / CHROME BACK BUTTON */
 
 function installBrowserBackGuard() {
     if (browserBackGuardInstalled) return;
 
     browserBackGuardInstalled = true;
 
-    // Create a history entry so the phone's Back button
-    // can be intercepted before leaving the app.
+    // Add a browser-history entry to intercept Android Back.
     window.history.pushState(
         { lineUpMakerBackGuard: true },
         "",
@@ -1154,13 +1155,13 @@ function installBrowserBackGuard() {
 
     window.addEventListener("popstate", () => {
 
-        // Exit was already confirmed through the app's Back button.
+        // The user already confirmed leaving through the app Back button.
         if (allowBrowserExit) return;
 
-        // Use exactly the same navigation function as the app Back button.
+        // Use the same navigation function as the app Back button.
         goBack(true);
 
-        // If exit was not confirmed, keep the app in the browser history.
+        // If the user cancelled, restore the browser-history guard.
         if (!allowBrowserExit) {
             window.history.pushState(
                 { lineUpMakerBackGuard: true },
