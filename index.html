@@ -1374,49 +1374,8 @@ function transposeSongContent(content, amount) {
         return transposeChordLine(line, amount);
     }).join("\n");
 }
-    
-    const editor = document.getElementById("editor-textarea");
 
-    if (!editor) return;
-
-    const original = editor.value;
-    const selectionStart = editor.selectionStart;
-    const selectionEnd = editor.selectionEnd;
-    const scrollTop = editor.scrollTop;
-    const scrollLeft = editor.scrollLeft;
-
-    const lines = original.split("\n");
-
-    const updatedLines = lines.map(line => {
-        if (!isChordLine(line)) return line;
-
-        return transposeChordLine(line, amount);
-    });
-
-    const updated = updatedLines.join("\n");
-
-    if (updated === original) {
-        alert("No chord lines were detected to transpose.");
-        return;
-    }
-
-    editor.value = updated;
-
-    // Keep the cursor and scroll position stable.
-    editor.setSelectionRange(
-        Math.min(selectionStart, updated.length),
-        Math.min(selectionEnd, updated.length)
-    );
-
-    editor.scrollTop = scrollTop;
-    editor.scrollLeft = scrollLeft;
-
-    renderColorOverlay();
-
-    // The editor content is now the transposed content.
-    // It will be saved normally when Save is tapped.
-}
-
+/* LINE COLOR TOOL */
 /* LINE COLOR TOOL */
 
 function toggleLineColorTool() {
