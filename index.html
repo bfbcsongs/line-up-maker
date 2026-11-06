@@ -1193,7 +1193,10 @@ function renderColorOverlay() {
 
     if (!editor || !overlay) return;
 
-    const scrollPosition = editor.scrollTop;
+    const scrollPosition = lineColorToolOpen
+        ? overlay.scrollTop
+        : editor.scrollTop;
+
     const lines = editor.value.split("\n");
 
     overlay.innerHTML = "";
@@ -1209,10 +1212,7 @@ function renderColorOverlay() {
             lineElement.classList.add(color);
         }
 
-        // Zero-width character keeps blank lines clickable
-        // without changing their visible text.
         lineElement.textContent = line.length ? line : "\u200b";
-
         lineElement.dataset.lineIndex = index;
 
         lineElement.addEventListener("click", () => {
@@ -1223,6 +1223,12 @@ function renderColorOverlay() {
     });
 
     overlay.scrollTop = scrollPosition;
+
+    if (lineColorToolOpen) {
+        editor.scrollTop = overlay.scrollTop;
+    } else {
+        overlay.scrollTop = editor.scrollTop;
+    }
 }
 
 function applyLineColor(index) {
@@ -1240,15 +1246,25 @@ function initializeColorEditor() {
 
     if (!editor || !overlay) return;
 
+    // Keep the colored overlay visible in normal Edit Mode.
+    editor.classList.add("color-mirror");
+
+    // Always update the colored display when lyrics are edited.
+    editor.addEventListener("input", () => {
+        renderColorOverlay();
+    });
+
+    // Normal Edit Mode: textarea controls scrolling.
     editor.addEventListener("scroll", () => {
-        if (lineColorToolOpen) {
+        if (!lineColorToolOpen) {
             overlay.scrollTop = editor.scrollTop;
         }
     });
 
-    editor.addEventListener("input", () => {
+    // Coloring Mode: overlay controls scrolling.
+    overlay.addEventListener("scroll", () => {
         if (lineColorToolOpen) {
-            renderColorOverlay();
+            editor.scrollTop = overlay.scrollTop;
         }
     });
 }
