@@ -1207,18 +1207,12 @@ function transposeGlobal(amount) {
 
     document.getElementById("trans-val").innerText =
         globalSemitones > 0 ? "+" + globalSemitones : globalSemitones;
+
+    // Refresh Play Mode using the new transpose value.
+    if (document.getElementById("view-play").classList.contains("active")) {
+        renderPlayScreen();
+    }
 }
-
-/*
-   CHORD RECOGNITION
-
-   Chords are recognized only on separate chord lines.
-   This avoids accidentally changing ordinary lyric words.
-
-   Supported examples:
-   C, D, F#, Bb, Am, Dm7, G7, Cmaj7,
-   Asus4, Cadd9, F#m7b5, G/B, D/F#
-*/
 
 function parseChordToken(token) {
     if (!token || token.includes("|")) return null;
@@ -1342,6 +1336,45 @@ function transposeEditor(amount) {
         closeLineColorTool();
     }
 
+    const editor = document.getElementById("editor-textarea");
+    if (!editor) return;
+
+    const original = editor.value;
+
+    const selectionStart = editor.selectionStart;
+    const selectionEnd = editor.selectionEnd;
+    const scrollTop = editor.scrollTop;
+    const scrollLeft = editor.scrollLeft;
+
+    const updated = transposeSongContent(original, amount);
+
+    if (updated === original) {
+        alert("No chord lines were detected to transpose.");
+        return;
+    }
+
+    editor.value = updated;
+
+    editor.setSelectionRange(
+        Math.min(selectionStart, updated.length),
+        Math.min(selectionEnd, updated.length)
+    );
+
+    editor.scrollTop = scrollTop;
+    editor.scrollLeft = scrollLeft;
+
+    renderColorOverlay();
+}
+    
+function transposeSongContent(content, amount) {
+    if (!amount) return content;
+
+    return content.split("\n").map(line => {
+        if (!isChordLine(line)) return line;
+        return transposeChordLine(line, amount);
+    }).join("\n");
+}
+    
     const editor = document.getElementById("editor-textarea");
 
     if (!editor) return;
