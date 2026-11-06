@@ -1163,9 +1163,11 @@ function closeLineColorTool() {
     if (overlay) overlay.classList.remove("active");
     if (toolbar) toolbar.classList.remove("active");
     if (toggle) toggle.classList.remove("active");
+    if (editor && overlay) {
+        editor.scrollTop = overlay.scrollTop;
+    }
 
     updateColorButtons();
-}
 
 function selectLineColor(color) {
     if (color !== "green" && color !== "white") return;
