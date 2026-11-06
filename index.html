@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -380,11 +379,13 @@ header {
     overflow-wrap: break-word;
 }
 
+/* Colored text remains visible in normal Edit Mode. */
 #editor-textarea.color-mirror {
     color: transparent !important;
     caret-color: var(--text-main);
 }
 
+/* Coloring Mode: overlay becomes the scrollable surface. */
 #editor-color-overlay.active {
     overflow-y: auto;
     pointer-events: auto;
@@ -876,9 +877,7 @@ function initializeFirebase() {
             const key = getSongKey(currentPlayingSong.title);
             currentLineColors = { ...(songLineColors[key] || {}) };
 
-            if (lineColorToolOpen) {
-                renderColorOverlay();
-            }
+            renderColorOverlay();
         }
     });
 
@@ -961,7 +960,9 @@ function applySongFontSize(size) {
         label.textContent = currentSongFontSize + "px";
     }
 
-    if (lineColorToolOpen) {
+    const editorView = document.getElementById("view-song-editor");
+
+    if (editorView && editorView.classList.contains("active")) {
         renderColorOverlay();
     }
 }
@@ -1098,6 +1099,8 @@ function confirmAddSongTitle() {
     applySongFontSize(DEFAULT_SONG_FONT_SIZE);
 
     document.getElementById("editor-textarea").value = "";
+    renderColorOverlay();
+
     document.getElementById("song-editor-heading").textContent =
         "Add Song Lyrics";
 
@@ -1145,10 +1148,13 @@ function openLineColorTool() {
 
     if (toggle) toggle.classList.add("active");
 
-    overlay.scrollTop = editor.scrollTop;
+    renderColorOverlay();
 
-renderColorOverlay();
-updateColorButtons();
+    overlay.scrollTop = editor.scrollTop;
+    editor.scrollTop = overlay.scrollTop;
+
+    updateColorButtons();
+}
 
 function closeLineColorTool() {
     lineColorToolOpen = false;
@@ -1163,11 +1169,14 @@ function closeLineColorTool() {
     if (overlay) overlay.classList.remove("active");
     if (toolbar) toolbar.classList.remove("active");
     if (toggle) toggle.classList.remove("active");
+
     if (editor && overlay) {
         editor.scrollTop = overlay.scrollTop;
+        overlay.scrollTop = editor.scrollTop;
     }
 
     updateColorButtons();
+}
 
 function selectLineColor(color) {
     if (color !== "green" && color !== "white") return;
@@ -1252,7 +1261,7 @@ function initializeColorEditor() {
     // Keep the colored overlay visible in normal Edit Mode.
     editor.classList.add("color-mirror");
 
-    // Always update the colored display when lyrics are edited.
+    // Refresh the overlay whenever lyrics are typed or pasted.
     editor.addEventListener("input", () => {
         renderColorOverlay();
     });
@@ -1721,6 +1730,8 @@ function openFullEditor() {
     document.getElementById("editor-textarea").value =
         currentPlayingSong.content || "";
 
+    renderColorOverlay();
+
     closeLineColorTool();
 
     switchView("view-song-editor");
@@ -1743,6 +1754,8 @@ function openPlayToEdit() {
 
     document.getElementById("editor-textarea").value =
         currentPlayingSong.content || "";
+
+    renderColorOverlay();
 
     closeLineColorTool();
 
