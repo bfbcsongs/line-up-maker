@@ -1711,8 +1711,11 @@ function renderSongContent(box, jumper, isPlayMode) {
         getSongFontSize(currentPlayingSong.title)
     );
 
-    const content = currentPlayingSong.content || "";
+    const originalContent = currentPlayingSong.content || "";
 
+const content = isPlayMode
+    ? transposeSongContent(originalContent, globalSemitones)
+    : originalContent;
     if (!isPlayMode || !jumper) {
         appendColoredText(box, content, 0);
         box.scrollTop = 0;
